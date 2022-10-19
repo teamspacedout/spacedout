@@ -83,7 +83,20 @@ Logs user into their Firebase account
 
 Starts all available emulators that were chosen from the Emulator Suite
 
+## Deployment
+
+First run `npm run build` to build the application, output is generated to `build/`
+[Firebase Hosting](https://firebase.google.com/docs/hosting)
+
 ### `firebase hosting:channel:deploy <feature_branch_name>`
 
 Deploys application to a Firebase Hosting preview channel
+
+### `firebase deploy --only hosting`
+
+Deploys application to Firebase Hosting
+
+### `firebase deploy --only hosting,functions`
+
+Deploys application to Hosting and Functions
 
