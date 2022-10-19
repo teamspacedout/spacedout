@@ -68,3 +68,22 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+# Firebase
+
+This project uses Firebase
+
+## Scripts
+
+### `firebase login`
+
+Logs user into their Firebase account
+
+### `firebase emulators:start`
+
+Starts all available emulators that were chosen from the Emulator Suite
+
+### `firebase hosting:channel:deploy <feature_branch_name>`
+
+Deploys application to a Firebase Hosting preview channel
+
