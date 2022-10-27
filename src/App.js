@@ -19,9 +19,7 @@ const router = createBrowserRouter([{
 function App() {
   return (
     <div>
-        <div className="-z-10">
             <Background/>
-        </div>
         <RouterProvider router={router} />
     </div>
   );
