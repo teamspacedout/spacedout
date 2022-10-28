@@ -10,10 +10,12 @@
         "firebase-debug.*.log"
       ],
       "predeploy": [
-        "npm --prefix \"$RESOURCE_DIR\" run lint"
       ]
     }
   ],
+  "firestore": {
+    "rules": "firestore.rules"
+  },
   "storage": {
     "rules": "storage.rules"
   },
@@ -25,7 +27,8 @@
       "port": 5001
     },
     "hosting": {
-      "port": 5000
+      "port": 5000,
+      "host": "0.0.0.0"
     },
     "storage": {
       "port": 9199
@@ -33,7 +36,10 @@
     "ui": {
       "enabled": true
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "firestore": {
+      "port": 8080
+    }
   },
   "hosting": {
     "public": "build",
