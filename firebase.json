@@ -33,7 +33,10 @@
     "ui": {
       "enabled": true
     },
-    "singleProjectMode": true
+    "singleProjectMode": true,
+    "firestore": {
+      "port": 8080
+    }
   },
   "hosting": {
     "public": "build",
