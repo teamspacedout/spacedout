@@ -1,6 +1,7 @@
 const functions = require("firebase-functions");
 const express = require("express");
 const app = express();
+const cors = require("cors")({origin: true});
 
 // // Create and Deploy Your First Cloud Functions
 // // https://firebase.google.com/docs/functions/write-firebase-functions
@@ -9,6 +10,8 @@ const app = express();
 //   functions.logger.info("Hello logs!", {structuredData: true});
 //   response.send("Hello from Firebase!");
 // });
+
+app.use(cors);
 
 app.get("/", (req, res) => {
 	const date = new Date();
