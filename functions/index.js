@@ -9,3 +9,31 @@ const app = express();
 //   functions.logger.info("Hello logs!", {structuredData: true});
 //   response.send("Hello from Firebase!");
 // });
+
+app.get("/", (req, res) => {
+	const date = new Date();
+	const hours = date.getHours() % 12;
+	res.send(`
+	<!DOCTYPE html>
+	<html>
+	  <head>
+	    <title>Spaced Out API</title>
+	  </head>
+
+	  <body>
+	    <p> The current time is ${date.toISOString()}</p>
+	    <button onClick="refresh(this)">Refresh</button>
+	  </body>
+	</html>
+		`);
+});
+
+
+app.get("/api", (req, res) => {
+	const date = new Date();
+	const hours = date.getHours() % 12;
+	res.json({ date: date, hours: hours});
+});
+
+
+exports.app = functions.https.onRequest(app);
