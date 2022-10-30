@@ -16,6 +16,10 @@ import { getStorage } from "firebase/storage";
 // For Firebase Analytics
 import { getAnalytics } from "firebase/analytics";
 
+// For Firebase Cloud Functions
+import { getFunctions } from "firebase/functions";
+
+
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -40,4 +44,6 @@ export const fireAuth = getAuth(fireApp);
 export const fireDB = getFirestore(fireApp);
 export const fireStorage = getStorage(fireApp);
 export const fireLytics = getAnalytics(fireApp);
+export const fireFunctions = getFunctions(fireApp);
+
 
