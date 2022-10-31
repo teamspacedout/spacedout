@@ -1,3 +1,6 @@
+/* Note: Always end an HTTP function with send(), redirect(), or end() to prevent
+ * the function from running continuously until forcibly terminated by the system
+ */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 
@@ -5,13 +8,6 @@ const express = require("express");
 const app = express();
 const cors = require("cors")({origin: true});
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
-// exports.helloWorld = functions.https.onRequest((request, response) => {
-//   functions.logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
 
 admin.initializeApp();
 
@@ -53,7 +49,7 @@ app.use(cors);
 app.get("/", (req, res) => {
 	const date = new Date();
 	const hours = date.getHours() % 12;
-	res.send(`
+	res.status(200).send(`
 	<!DOCTYPE html>
 	<html>
 	  <head>
@@ -72,7 +68,7 @@ app.get("/", (req, res) => {
 app.get("/api", (req, res) => {
 	const date = new Date();
 	const hours = date.getHours() % 12;
-	res.json({ date: date, hours: hours});
+	res.status(200).send({ date: date, hours: hours}).json();
 });
 
 
