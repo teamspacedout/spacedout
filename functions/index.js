@@ -3,13 +3,16 @@
  */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-
+const Logging = require('@google-cloud/logging');
 const express = require("express");
+
 const app = express();
 const cors = require("cors")({origin: true});
 
 
+// Initialization
 admin.initializeApp();
+const logging = Logging();
 
 exports.addMessage = functions.https.onRequest(async (req, res) => {
 	// Grab the parameter
