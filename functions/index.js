@@ -3,17 +3,22 @@
  */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const Logging = require('@google-cloud/logging');
+const { Logging } = require('@google-cloud/logging');
 const express = require("express");
 
 const app = express();
 const cors = require("cors")({origin: true});
 
+const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
 
 // Initialization
 admin.initializeApp();
-const logging = Logging();
+const logging = new Logging();
 
+
+/*
+ * Example function:
+ *
 exports.addMessage = functions.https.onRequest(async (req, res) => {
 	// Grab the parameter
 	const original = req.query.text;
@@ -46,12 +51,15 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
 		
 	//res.json({result: `Message with ID: ${writeResult.id} and Data: ${original}`});
 });
+*
+*/
 
 app.use(cors);
 
 app.get("/", (req, res) => {
 	const date = new Date();
 	const hours = date.getHours() % 12;
+	const reload = () => window.location.reload(true);
 	res.status(200).send(`
 	<!DOCTYPE html>
 	<html>
@@ -61,7 +69,7 @@ app.get("/", (req, res) => {
 
 	  <body>
 	    <p> The current time is ${date.toISOString()}</p>
-	    <button onClick="refresh(this)">Refresh</button>
+	    <button onClick="window.location.reload(true)">Refresh</button>
 	  </body>
 	</html>
 		`);
@@ -70,8 +78,10 @@ app.get("/", (req, res) => {
 
 app.get("/api", (req, res) => {
 	const date = new Date();
-	const hours = date.getHours() % 12;
-	res.status(200).send({ date: date, hours: hours}).json();
+	const hours = date.getHours();
+	const minutes = date.getMinutes();
+	console.log(date.toString(), hours, minutes);
+	res.status(200).send({ date: date.toISOString(), hours: hours, minutes: minutes}).json();
 });
 
 
