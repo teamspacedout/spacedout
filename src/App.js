@@ -3,6 +3,8 @@ import { fireAuth, fireDB, fireStorage, fireLytics } from "./firebase";
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import Root from "./routes/Root";
 import {Background} from "./components/Background";
+import UserLogin from "./lib/context";
+import {useUserAuth} from "./lib/hooks";
 
 
 const router = createBrowserRouter([{
@@ -12,11 +14,16 @@ const router = createBrowserRouter([{
 
 
 function App() {
+
+const data = useUserAuth();
+
   return (
-    <div>
+    <>
+        <UserLogin.Provider value = {data}>
             <Background/>
         <RouterProvider router={router} />
-    </div>
+        </UserLogin.Provider>
+    </>
   );
 }
 
