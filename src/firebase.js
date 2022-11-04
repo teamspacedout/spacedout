@@ -2,13 +2,14 @@
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 // For initializing the app once. Is used to initialize other Firebase SDKs
+
 import { initializeApp } from "firebase/app";
 
 // For Firebase Authentication
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup} from "firebase/auth";
 
 // For Firebase Cloud Firestore (Firestore DB)
-import { getFirestore, collection, doc, getDoc, query} from "firebase/firestore";
+import { getFirestore, collection, doc, getDoc, query, onSnapshot} from "firebase/firestore";
 
 // For Firebase Cloud Storage
 import { getStorage } from "firebase/storage";
@@ -41,5 +42,5 @@ export const fireAuth = getAuth(fireApp);
 export const fireDB = getFirestore(fireApp);
 export const fireStorage = getStorage(fireApp);
 export const fireLytics = getAnalytics(fireApp);
-export {collection, doc, getDoc, query};
+export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider};
 

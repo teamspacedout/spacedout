@@ -2,29 +2,28 @@ import './App.css';
 import { fireAuth, fireDB, fireStorage, fireLytics } from "./firebase";
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import Root from "./routes/Root";
-import Login from "./routes/Login";
 import {Background} from "./components/Background";
 import UserLogin from "./lib/context";
+import {useUserAuth} from "./lib/hooks";
 
 
 const router = createBrowserRouter([{
-        path: "/",
-        element: <Root />,
-    },
-    {
-        path: "/Login",
-        element: <Login />,
-    }])
+    path: "/",
+    element: <Root />,
+}])
 
 
 function App() {
+
+const data = useUserAuth();
+
   return (
-      <UserLogin.provider>
-          <div>
+    <>
+        <UserLogin.Provider value = {data}>
             <Background/>
-            <RouterProvider router={router} />
-          </div>
-      </UserLogin.provider>
+        <RouterProvider router={router} />
+        </UserLogin.Provider>
+    </>
   );
 }
 
