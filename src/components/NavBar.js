@@ -1,7 +1,12 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {Link} from "react-router-dom";
+import {MaintainAuthState} from "../lib/hooks";
+import UserLogin from "../lib/context";
 
 function NavBar() {
+
+    const {User, Username} = useContext(UserLogin);
+
     return (
         <div className="navbar absolute">
             <div className="flex-1">
@@ -24,6 +29,14 @@ function NavBar() {
             </div>
         </div>
     );
+}
+
+function SignIn() {
+
+}
+
+function SignOut() {
+
 }
 
 export default NavBar;
