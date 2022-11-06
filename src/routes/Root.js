@@ -3,6 +3,7 @@ import NavBar from "../components/NavBar";
 import '../App.css';
 
 
+
 function Root() {
     return (
         <main>

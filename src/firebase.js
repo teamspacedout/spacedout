@@ -2,13 +2,14 @@
 // TODO: Add SDKs for Firebase products that you want to use
 // https://firebase.google.com/docs/web/setup#available-libraries
 // For initializing the app once. Is used to initialize other Firebase SDKs
+
 import { initializeApp } from "firebase/app";
 
 // For Firebase Authentication
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup} from "firebase/auth";
 
 // For Firebase Cloud Firestore (Firestore DB)
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, collection, doc, getDoc, query, onSnapshot} from "firebase/firestore";
 
 // For Firebase Cloud Storage
 import { getStorage } from "firebase/storage";
@@ -23,15 +24,16 @@ import { getFunctions } from "firebase/functions";
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyBnoX0koTAAnZDHMsW4XYETuzlakciiJVE",
+  authDomain: "lateral-incline-365622.firebaseapp.com",
+  projectId: "lateral-incline-365622",
+  storageBucket: "lateral-incline-365622.appspot.com",
+  messagingSenderId: "596326794480",
+  appId: "1:596326794480:web:78643020d43b5032b8ae35",
+  measurementId: "G-X3YWS1RDJM"
 };
 
+console.log(firebaseConfig.apiKey);
 // Name of our Firebase application
 const appName = "Spaced Out - Web";
 
@@ -46,4 +48,5 @@ export const fireStorage = getStorage(fireApp);
 export const fireLytics = getAnalytics(fireApp);
 export const fireFunctions = getFunctions(fireApp);
 
+export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider};
 
