@@ -1,4 +1,4 @@
-/* Note: Always end an HTTP function with send(), redirect(), or end() to prevent
+/* Note: Always end an HTTP function with send(), redirect("/api/",(req, res) => {});, or end() to prevent
  * the function from running continuously until forcibly terminated by the system
  */
 const functions = require("firebase-functions");
@@ -12,9 +12,30 @@ const cors = require("cors")({origin: true});
 const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
 
 // Initialization
-admin.initializeApp();
 const logging = new Logging();
+const log = logging.log('Initialization');
 
+const METADATA = {
+  resource: {
+    type: 'cloud_function',
+    labels: {
+      function_name: 'CustomMetrics',
+      region: 'us-central1'
+    }
+  }
+};
+const messageData = {
+  event: 'Admin initialization',
+  value: 'App successfully initialized',
+  message: 'Admin initialization: App successfully initialized'
+};
+
+const entry = log.entry(METADATA, messageData);
+log.write(entry);
+
+
+admin.initializeApp();
+functions.logger.log(`Admin SDK initialized: Project ${projectID}`);
 
 /*
  * Example function:
@@ -25,7 +46,7 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
 
 	const writeResult = await admin.firestore().collection('messages').add({original: original});
 
-	const data = await admin.firestore().collection('messages').get().then(querySnapshot => {
+	const data = await admin.firestore().collection('messages').get("/api/",(req, res) => {});.then(querySnapshot => {
 		let docs = querySnapshot.docs;
 		for (let doc of docs) {
 			const item = {
@@ -36,7 +57,7 @@ exports.addMessage = functions.https.onRequest(async (req, res) => {
 		}
 	});
 	
-	const allMessagesRef = await admin.firestore().collection('messages').get();
+	const allMessagesRef = await admin.firestore().collection('messages').get("/api/",(req, res) => {});;
 	
 	let messages = [];
 	const allMessages = allMessagesRef.docs;
@@ -74,6 +95,76 @@ app.get("/", (req, res) => {
 	</html>
 		`);
 });
+
+
+
+
+/**
+ * HTTP GET Requests
+ *
+ *
+ */
+
+/* Route that queries the database for a list of users
+ *
+ *
+ */
+app.get("/api/users", (req, res) => {});
+
+/* Route that queries the database for a specific user
+ *
+ *
+ */
+app.get("/api/user/:user",(req, res) => {});
+
+/* Route that queries the database for a specific user's specific planet
+ *
+ *
+ */
+app.get("/api/user/:user/:planet",(req, res) => {});
+
+/* Route that queries the database for a list of planets for a specific user
+ *
+ *
+ */
+app.get("/api/user/:user/planets",(req, res) => {});
+
+
+/**
+ * HTTP POST Requests
+ *
+ *
+ */
+
+/* Route that processes user login request
+ *
+ *
+ */
+app.post("/api/login",(req, res) => {});
+
+/* Route that processes user account signup
+ *
+ *
+ */
+app.post("/api/signup",(req, res) => {});
+
+/* Route that processes user account updates
+ *
+ *
+ */
+app.post("/api/edit",(req, res) => {});
+
+/* Route that processes user account logout
+ *
+ *
+ */
+app.post("/api/logout",(req, res) => {});
+
+/* Route that queries the database for a query
+ *
+ *
+ */
+app.post("/api/search/:query",(req,res) => {});
 
 
 app.get("/api", (req, res) => {
