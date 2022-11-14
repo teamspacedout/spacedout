@@ -3,7 +3,7 @@
  */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const { Logging } = require('@google-cloud/logging');
+const { Logging } = require("@google-cloud/logging");
 const express = require("express");
 
 const app = express();
@@ -13,21 +13,21 @@ const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
 
 // Initialization
 const logging = new Logging();
-const log = logging.log('Initialization');
+const log = logging.log("Initialization");
 
 const METADATA = {
   resource: {
-    type: 'cloud_function',
+    type: "cloud_function",
     labels: {
-      function_name: 'CustomMetrics',
-      region: 'us-central1'
-    }
-  }
+      function_name: "CustomMetrics",
+      region: "us-central1",
+    },
+  },
 };
 const messageData = {
-  event: 'Admin initialization',
-  value: 'App successfully initialized',
-  message: 'Admin initialization: App successfully initialized'
+  event: "Admin initialization",
+  value: "App successfully initialized",
+  message: "Admin initialization: App successfully initialized",
 };
 
 const entry = log.entry(METADATA, messageData);
@@ -37,43 +37,6 @@ log.write(entry);
 admin.initializeApp();
 functions.logger.log(`Admin SDK initialized: Project ${projectID}`);
 
-/*
- * Example function:
- *
-exports.addMessage = functions.https.onRequest(async (req, res) => {
-	// Grab the parameter
-	const original = req.query.text;
-
-	const writeResult = await admin.firestore().collection('messages').add({original: original});
-
-	const data = await admin.firestore().collection('messages').get("/api/",(req, res) => {});.then(querySnapshot => {
-		let docs = querySnapshot.docs;
-		for (let doc of docs) {
-			const item = {
-				id: doc.id,
-				data: doc.data().original
-			};
-			console.log(item);
-		}
-	});
-	
-	const allMessagesRef = await admin.firestore().collection('messages').get("/api/",(req, res) => {});;
-	
-	let messages = [];
-	const allMessages = allMessagesRef.docs;
-	for (let entry of allMessages) {
-		messages.push({id: entry.id, data: entry.data().original});
-	}
-	
-
-	res.json(messages.map(message => `ID: ${message.id} \tData: ${message.data}\n`));
-	
-	//res.json(allMessages.map(doc => doc))
-		
-	//res.json({result: `Message with ID: ${writeResult.id} and Data: ${original}`});
-});
-*
-*/
 
 app.use(cors);
 
@@ -97,6 +60,13 @@ app.get("/", (req, res) => {
 });
 
 
+app.get("/api", (req, res) => {
+	const date = new Date();
+	const hours = date.getHours();
+	const minutes = date.getMinutes();
+	console.log(date.toString(), hours, minutes);
+	res.status(200).send({ date: date.toISOString(), hours: hours, minutes: minutes}).json();
+});
 
 
 /**
@@ -165,15 +135,6 @@ app.post("/api/logout",(req, res) => {});
  *
  */
 app.post("/api/search/:query",(req,res) => {});
-
-
-app.get("/api", (req, res) => {
-	const date = new Date();
-	const hours = date.getHours();
-	const minutes = date.getMinutes();
-	console.log(date.toString(), hours, minutes);
-	res.status(200).send({ date: date.toISOString(), hours: hours, minutes: minutes}).json();
-});
 
 
 exports.app = functions.https.onRequest(app);
