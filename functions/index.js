@@ -239,7 +239,19 @@ app.post("/api/auth/user/logout", (req, res) => {});
 
 /** DB endpoint: Queries the database for a list of users
  */
-app.get("/api/db/users", (req, res) => {});
+app.get("/api/db/users", (req, res) => {
+  const usersDocuments = [];
+  firestore.collection("Users").get()
+      .then((docs) => {
+        docs.forEach((doc) => {
+          usersDocuments.push(doc.data());
+        });
+        res.status(200).send(usersDocuments);
+      }).catch((error) => {
+        console.log("Error: ", error);
+        res.status(400).send(error);
+      });
+});
 
 /** DB endpoint: Queries the database for a specific user
  */
