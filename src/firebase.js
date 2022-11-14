@@ -6,7 +6,7 @@
 import { initializeApp } from "firebase/app";
 
 // For Firebase Authentication
-import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup, createUserWithEmailAndPassword} from "firebase/auth";
 
 // For Firebase Cloud Firestore (Firestore DB)
 import { getFirestore, collection, doc, getDoc, query, onSnapshot} from "firebase/firestore";
