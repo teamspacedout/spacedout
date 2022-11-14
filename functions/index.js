@@ -87,7 +87,31 @@ app.get("/api", (req, res) => {
  * @return: Returns an array of UserRecord Auth objects
  * Currently limits request to 50 users
  */
-app.get("/api/auth/users", (req, res) => {});
+app.get("/api/auth/users", (req, res) => {
+  const usersList = [];
+  auth
+      .listUsers(50)
+      .then((listUsersResult) => {
+        listUsersResult.users.forEach((userRecord) => {
+          console.log(userRecord);
+          const strippedRecord = {
+            uid: userRecord.uid,
+            email: userRecord.email,
+            emailVerified: userRecord.emailVerified,
+            displayName: userRecord.displayName,
+            photoUrl: userRecord.photoURL,
+            metadata: userRecord.metadata,
+            providerId: userRecord.providerData,
+          };
+          usersList.push(strippedRecord);
+        });
+        res.send(usersList);
+      })
+      .catch((error) => {
+        console.log("Error: ", error);
+        res.status(400).send(error);
+      });
+});
 
 /** Auth endpoint: Queries Firebase Auth for a specific user
  * @return: Returns an UserRecord Auth object
