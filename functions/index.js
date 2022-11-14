@@ -80,11 +80,57 @@ app.get("/api", (req, res) => {
 });
 
 
-/**
- * HTTP GET Requests
- *
- *
+/** Firebase Authentication Endpoints
  */
+
+/** Auth endpoint: Queries Firebase Auth for a list of users
+ * @return: Returns an array of UserRecord Auth objects
+ * Currently limits request to 50 users
+ */
+app.get("/api/auth/users", (req, res) => {});
+
+/** Auth endpoint: Queries Firebase Auth for a specific user
+ * @return: Returns an UserRecord Auth object
+ */
+app.get("/api/auth/user/:user", (req, res) => {});
+
+/** Auth endpoint: Updates Firebase Auth for a specific user
+ * @return: Returns an UserRecord Auth object
+ */
+app.put("/api/auth/user/:user", (req, res) => {});
+
+/** Auth endpoint: Deletes Firebase Auth for a specific user
+ * @return: Returns an object containing success state
+ */
+app.delete("/api/auth/user/:user", (req, res) => {});
+
+/** Auth endpoint: Processes user account signup
+ * Creates a User with Firebase Authentication
+ * using Email/Password form-data
+ *
+ * On successful user Auth creation, a User document
+ * is created in Firestore and populated with the user's
+ * data and default User document values
+ *
+ * @param req: { email, password, displayName}
+ *
+ * @return: Returns { displayName, uid, authToken }
+ */
+app.post("/api/auth/user/signup", (req, res) => {});
+
+/** Auth endpoint: Processes user login request
+ * @param req: { email, password }
+ * @return { authToken }
+ */
+app.post("/api/auth/user/login", (req, res) => {});
+
+/** Auth endpoint: Processes user account logout
+ * @param req: { authToken }
+ * @return { statusMessage }
+ */
+app.post("/api/auth/user/logout", (req, res) => {});
+
+
 
 /* Route that queries the database for a list of users
  *
@@ -96,50 +142,26 @@ app.get("/api/users", (req, res) => {});
  *
  *
  */
-app.get("/api/user/:user",(req, res) => {});
+app.get("/api/user/:user", (req, res) => {});
 
 /* Route that queries the database for a specific user's specific planet
  *
  *
  */
-app.get("/api/user/:user/:planet",(req, res) => {});
+app.get("/api/user/:user/:planet", (req, res) => {});
 
 /* Route that queries the database for a list of planets for a specific user
  *
  *
  */
-app.get("/api/user/:user/planets",(req, res) => {});
+app.get("/api/user/:user/planets", (req, res) => {});
 
-
-/**
- * HTTP POST Requests
- *
- *
- */
-
-/* Route that processes user login request
- *
- *
- */
-app.post("/api/login",(req, res) => {});
-
-/* Route that processes user account signup
- *
- *
- */
-app.post("/api/signup",(req, res) => {});
 
 /* Route that processes user account updates
  *
  *
  */
 app.post("/api/edit",(req, res) => {});
-
-/* Route that processes user account logout
- *
- *
- */
-app.post("/api/logout",(req, res) => {});
 
 /* Route that queries the database for a query
  *
