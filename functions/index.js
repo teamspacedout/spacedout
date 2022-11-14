@@ -131,43 +131,45 @@ app.post("/api/auth/user/login", (req, res) => {});
 app.post("/api/auth/user/logout", (req, res) => {});
 
 
-
-/* Route that queries the database for a list of users
- *
- *
+/** Firebase Firestore Endpoints
  */
-app.get("/api/users", (req, res) => {});
 
-/* Route that queries the database for a specific user
- *
- *
+/** DB endpoint: Queries the database for a list of users
  */
-app.get("/api/user/:user", (req, res) => {});
+app.get("/api/db/users", (req, res) => {});
 
-/* Route that queries the database for a specific user's specific planet
- *
- *
+/** DB endpoint: Queries the database for a specific user
  */
-app.get("/api/user/:user/:planet", (req, res) => {});
+app.get("/api/db/user/:user", (req, res) => {});
 
-/* Route that queries the database for a list of planets for a specific user
- *
- *
+/** DB endpoint: Updates document for a specific user
  */
-app.get("/api/user/:user/planets", (req, res) => {});
+app.put("/api/db/user/:user", (req, res) => {});
 
-
-/* Route that processes user account updates
- *
- *
+/** DB endpoint: Deletes the document for a specific user
  */
-app.post("/api/edit",(req, res) => {});
+app.delete("/api/db/user/:user", (req, res) => {});
 
-/* Route that queries the database for a query
- *
- *
+
+/** DB endpoint: Queries the database for a list of planets
  */
-app.post("/api/search/:query",(req,res) => {});
+app.get("/api/db/planets", (req, res) => {});
+
+/** DB endpoint: Queries the database for a specific planet
+ */
+app.get("/api/db/planet/:planet", (req, res) => {});
+
+/** DB endpoint: Updates document for a specific planet
+ */
+app.put("/api/db/planet/:planet", (req, res) => {});
+
+/** DB endpoint: Deletes the document for a specific planet
+ */
+app.delete("/api/db/planet/:planet", (req, res) => {});
+
+/** DB endpoint: Creates a new planet document
+ */
+app.post("/api/db/createPlanet", (req, res) => {});
 
 
 exports.app = functions.https.onRequest(app);
