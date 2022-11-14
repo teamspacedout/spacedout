@@ -52,10 +52,10 @@ app.use(cors);
 
 
 app.get("/", (req, res) => {
-	const date = new Date();
-	const hours = date.getHours() % 12;
-	const reload = () => window.location.reload(true);
-	res.status(200).send(`
+  const date = new Date();
+  const hours = date.getHours() % 12;
+  const reload = () => window.location.reload(true);
+  res.status(200).send(`
 	<!DOCTYPE html>
 	<html>
 	  <head>
@@ -72,11 +72,11 @@ app.get("/", (req, res) => {
 
 
 app.get("/api", (req, res) => {
-	const date = new Date();
-	const hours = date.getHours();
-	const minutes = date.getMinutes();
-	console.log(date.toString(), hours, minutes);
-	res.status(200).send({ date: date.toISOString(), hours: hours, minutes: minutes}).json();
+  const date = new Date();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  console.log(date.toString(), hours, minutes);
+  res.status(200).send({date: date.toISOString(), hours: hours, minutes: minutes}).json();
 });
 
 
@@ -112,11 +112,90 @@ app.delete("/api/auth/user/:user", (req, res) => {});
  * is created in Firestore and populated with the user's
  * data and default User document values
  *
- * @param req: { email, password, displayName}
+ * @param req: { email, password, displayName }
  *
  * @return: Returns { displayName, uid, authToken }
  */
-app.post("/api/auth/user/signup", (req, res) => {});
+app.post("/api/auth/user/signup", (req, res) => {
+  // Create User Auth object from request data
+  const user = {
+    email: req.body.email,
+    emailVerified: false,
+    password: req.body.password,
+    displayName: req.body.displayName,
+  };
+
+  // Create user using Firebase Auth
+  auth.createUser(user)
+      .then((userRecord) => {
+        const uid = userRecord.uid;
+
+        // Create Auth Token for Client
+        let authToken = "";
+        auth.createCustomToken(uid).then((data) => {
+          authToken = data;
+        });
+
+        // Get Auth Provider IDs
+        const providers = [];
+        userRecord.providerData.forEach((provider) => {
+          providers.push(provider.providerId);
+        });
+
+        // Create User document using User Auth data
+        const usersRef = firestore.collection("Users");
+        usersRef.doc(uid).set({
+          uid: uid,
+          Username: user.displayName,
+          User_email: user.email,
+          Email_verified: userRecord.emailVerified,
+          Account_created: userRecord.metadata.creationTime,
+          Last_login: userRecord.metadata.lastSignInTime,
+          Provider_Id: providers,
+          Friend_count: 0,
+          Friends: [],
+          Planet_count: 0,
+          Planets: {},
+        }).then( () => {
+          // Return user data and auth token
+          res.status(200).send({
+            displayName: user.displayName,
+            uid: uid,
+            authToken: authToken,
+          });
+        }
+        );
+      })
+      .catch((error) => {
+        let errorResponse = {};
+        switch (error.code) {
+          case "auth/email-already-in-use":
+            errorResponse = {error: "Email address is already in use"};
+            break;
+
+          case "auth/email-already-exists":
+            errorResponse = {error: "Email address is already in use"};
+            break;
+
+          case "auth/invalid-email":
+            errorResponse = {error: "Email address is invalid"};
+            break;
+
+          case "auth/operation-not-allowed":
+            errorResponse = {error: "Sign up failed, operation not permitted"};
+            break;
+
+          case "auth/weak-password":
+            errorResponse = {error: "Password is not strong enough"};
+            break;
+
+          default:
+            errorResponse = {error: error.code };
+        }
+        res.status(500).send(errorResponse);
+      });
+});
+
 
 /** Auth endpoint: Processes user login request
  * @param req: { email, password }
