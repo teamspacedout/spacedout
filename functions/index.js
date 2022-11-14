@@ -1,25 +1,31 @@
-/* Note: Always end an HTTP function with send(), redirect("/api/",(req, res) => {});, or end() to prevent
- * the function from running continuously until forcibly terminated by the system
+/*
+import { getFirestore } from 'firebase/firestore';
+ * Note: Always end an HTTP function with send(),
+ * redirect("/api/",(req, res) => {});, or end() to prevent
+ * the function from running continuously until forcibly
+ * terminated by the system
  */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const { Logging } = require("@google-cloud/logging");
-const express = require("express");
+const {Logging} = require("@google-cloud/logging");
 
+const express = require("express");
 const app = express();
 const cors = require("cors")({origin: true});
 
 const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
 
+
 // Initialization
 const logging = new Logging();
 const log = logging.log("Initialization");
 
+// Create data for Cloud Logging log
 const METADATA = {
   resource: {
     type: "cloud_function",
     labels: {
-      function_name: "CustomMetrics",
+      function_name: "App",
       region: "us-central1",
     },
   },
@@ -30,15 +36,20 @@ const messageData = {
   message: "Admin initialization: App successfully initialized",
 };
 
+// Write log to Cloud Logging
 const entry = log.entry(METADATA, messageData);
 log.write(entry);
 
+// Initialize App using Admin SDK
+const fireApp = admin.initializeApp();
+functions.logger.log(`Started => Project: ${projectID}, Name: ${fireApp.name}`);
 
-admin.initializeApp();
-functions.logger.log(`Admin SDK initialized: Project ${projectID}`);
-
+// Create SDK references
+const auth = admin.auth();
+const firestore = admin.firestore();
 
 app.use(cors);
+
 
 app.get("/", (req, res) => {
 	const date = new Date();
