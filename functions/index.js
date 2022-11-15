@@ -53,8 +53,6 @@ app.use(cors);
 
 app.get("/", (req, res) => {
   const date = new Date();
-  const hours = date.getHours() % 12;
-  const reload = () => window.location.reload(true);
   res.status(200).send(`
 	<!DOCTYPE html>
 	<html>
@@ -75,7 +73,6 @@ app.get("/api", (req, res) => {
   const date = new Date();
   const hours = date.getHours();
   const minutes = date.getMinutes();
-  console.log(date.toString(), hours, minutes);
   res.status(200).send({date: date.toISOString(), hours: hours, minutes: minutes}).json();
 });
 
@@ -93,7 +90,6 @@ app.get("/api/auth/users", (req, res) => {
       .listUsers(50)
       .then((listUsersResult) => {
         listUsersResult.users.forEach((userRecord) => {
-          console.log(userRecord);
           const strippedRecord = {
             uid: userRecord.uid,
             email: userRecord.email,
@@ -108,8 +104,7 @@ app.get("/api/auth/users", (req, res) => {
         res.send(usersList);
       })
       .catch((error) => {
-        console.log("Error: ", error);
-        res.status(400).send(error);
+        res.status(400).send(error.code);
       });
 });
 
@@ -375,6 +370,26 @@ app.post("/api/db/createPlanet", (req, res) => {
   })
       .catch((error) => {
         res.status(500).send({error: error.code});
+      });
+});
+
+/** DB endpoint: Queries the database for a list of
+ * zones in the Zones Subcollection of a specific Planet
+ * @param req: { planet } - The Document ID of the planet
+ * @return Array - An array containing the Zones documents data
+ */
+app.get("/api/db/planet/:planet/Zones", (req, res) => {
+  const planetZonesDocuments = [];
+  const planetId = req.params.planet;
+  firestore.collection(`Planets/${planetId}/Zones`).get()
+      .then((docs) => {
+        docs.forEach((doc) => {
+          planetZonesDocuments.push(doc.data());
+        });
+        res.status(200).send(planetZonesDocuments);
+      })
+      .catch((error) => {
+        res.status(500).send({Error: error.code});
       });
 });
 
