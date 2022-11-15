@@ -11,6 +11,8 @@ import UserPage from "./routes/UserPage";
 import Freeroam from "./routes/Freeroam";
 import EditPlanet from "./routes/EditPlanet";
 import Settings from "./routes/Settings";
+import Footer from "./components/Footer";
+import React from "react";
 
 
 const router = createBrowserRouter([{
@@ -59,7 +61,7 @@ const data = useUserAuth();
     <>
         <UserLogin.Provider value = {data}>
             <Background/>
-        <RouterProvider router={router} />
+            <RouterProvider router={router} />
         </UserLogin.Provider>
     </>
   );

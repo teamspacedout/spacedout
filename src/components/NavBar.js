@@ -24,7 +24,7 @@ function NavBar() {
             <div className="justify-items-end dropdown dropdown-end">
                 <label tabIndex="0" className="btn btn-ghost btn-circle avatar">
                     <div className="w-10 rounded-full">
-                        <img alt='A picture of an ice planet TEMP' src="/assests/IcePlanet.png"/>
+                        <img alt='ice planet TEMP' src="/assests/IcePlanet.png"/>
                     </div>
                 </label>
                 <ul tabIndex="0"

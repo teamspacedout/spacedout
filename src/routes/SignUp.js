@@ -1,4 +1,4 @@
-import {collection, doc, fireAuth, fireDB, query} from "../firebase";
+import {collection, fireAuth, fireDB} from "../firebase";
 import {createUserWithEmailAndPassword} from "firebase/auth";
 
 
@@ -22,11 +22,11 @@ function SignUp() {
                     </div>
 
                     <div>
-                        <label> Password: <input className="input input-bordered w-full max-w-xs" type="password" name="password" /> </label>
+                        <label className=" text-white " > Password: <input className="input input-bordered w-full max-w-xs" type="password" name="password" /> </label>
                     </div>
 
                     <div>
-                        <label> Your Email: <input className="input input-bordered w-full max-w-xs" type="email" name="email" /> </label>
+                        <label className=" text-white " > Your Email: <input className="input input-bordered w-full max-w-xs" type="email" name="email" /> </label>
                     </div>
                 <div>
                     <input className="mt-4 btn bg-blue-600-40 btn-primary" type="submit" value="Sign Up" />
