@@ -14,8 +14,6 @@ export function useUserAuth() {
             const userRef = collection(fireDB, 'Users');
             const refDoc = doc(userRef, user.uid);
 
-            console.log(user.uid);
-
             unsubscribe = onSnapshot(refDoc, (doc) => {
                 setUsername(doc.data()?.username);
             })

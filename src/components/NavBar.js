@@ -1,9 +1,8 @@
 import React, {useContext} from 'react';
 import {Link} from "react-router-dom";
-import {MaintainAuthState} from "../lib/hooks";
 import UserLogin from "../lib/context";
-import {fireAuth, GoogleAuthProvider} from "../firebase";
-import {signInWithPopup} from "firebase/auth";
+import {fireAuth} from "../firebase";
+import Modal from "./Modal";
 
 function NavBar() {
 
@@ -13,6 +12,11 @@ function NavBar() {
 
     return (
         <div className="navbar absolute">
+
+            <input type="checkbox" id="login" className="modal-toggle" />
+            <Modal/>
+
+
             <div className="flex-1">
                 <Link to = '/' className="btn btn-ghost text-white normal-case text-xl">Spaced Out</Link>
             </div>
@@ -25,9 +29,9 @@ function NavBar() {
                 </label>
                 <ul tabIndex="0"
                     className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
-                    <li> <Link to='/'> My Planet </Link> </li>
-                    <li> <Link to='/'> Edit Planet </Link> </li>
-                    <li> <Link to='/'> Free-Roam </Link> </li>
+                    <li> <Link to={user ? `/${user.uid}` : '/404'}> My Planet </Link> </li>
+                    <li> <Link to= {user ? `/${user.uid}/edit` : '/404' }> Edit Planet </Link> </li>
+                    <li> <Link to='/freeroam'> Free-Roam </Link> </li>
                     <li> <Link to= '/'>Settings</Link></li>
                     <li> <Link to= '/'>Logout</Link></li>
                 </ul>
@@ -39,14 +43,9 @@ function NavBar() {
 }
 
 function SignIn() {
-    const logIn = new GoogleAuthProvider();
-
-    const googleLogin = async () => {
-        await signInWithPopup(fireAuth, logIn);
-    }
 
     return (
-    <button className="btn btn-info text-white" onClick={googleLogin}> Sign In </button>
+    <label htmlFor="login" className="btn btn-info text-white"> Sign In </label>
     )
 }
 
