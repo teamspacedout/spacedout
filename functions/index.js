@@ -268,7 +268,19 @@ app.delete("/api/db/user/:user", (req, res) => {});
 
 /** DB endpoint: Queries the database for a list of planets
  */
-app.get("/api/db/planets", (req, res) => {});
+app.get("/api/db/planets", (req, res) => {
+  const planetsDocuments = [];
+  firestore.collection("Planets").get()
+      .then((docs) => {
+        docs.forEach((doc) => {
+          planetsDocuments.push(doc.data());
+        });
+        res.status(200).send(planetsDocuments);
+      })
+      .catch((error) => {
+        console.log("Error: ", error);
+      });
+});
 
 /** DB endpoint: Queries the database for a specific planet
  */
