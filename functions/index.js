@@ -283,6 +283,15 @@ app.put("/api/db/planet/:planet", (req, res) => {});
 app.delete("/api/db/planet/:planet", (req, res) => {});
 
 /** DB endpoint: Creates a new planet document
+ * @param req:
+ *  {
+ *    uid,              (String)
+ *    planetName,       (String)
+ *    planetImage,      (OPTIONAL)
+ *    planetTags,       (Array)
+ *    zoneName,         (String)
+ *    zoneDescription,  (String)
+ *  }
  */
 app.post("/api/db/createPlanet", (req, res) => {
   const uid = req.body.uid;
