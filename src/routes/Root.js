@@ -17,7 +17,7 @@ function Root() {
                 <h1 className="text-3xl text-yellow-300 font-bold py-3 ">
             Search for a New Planet
         </h1>
-            <input type="text" placeholder="Type here" className="input input-bordered w-full max-w-xs"/>
+            <input type="text" placeholder="Type here" className="ml-2 input input-bordered w-full max-w-xs"/>
             </div>
                 <Footer/>
             </div>
