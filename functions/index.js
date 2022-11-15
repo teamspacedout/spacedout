@@ -147,43 +147,16 @@ app.post("/api/auth/user/signup", (req, res) => {
   // Create user using Firebase Auth
   auth.createUser(user)
       .then((userRecord) => {
-        const uid = userRecord.uid;
-
         // Create Auth Token for Client
-        let authToken = "";
+        const uid = userRecord.uid;
         auth.createCustomToken(uid).then((data) => {
-          authToken = data;
+          const user = {
+            displayName: userRecord.displayName,
+            uid,
+            authToken: data,
+          };
+          res.status(200).send(user);
         });
-
-        // Get Auth Provider IDs
-        const providers = [];
-        userRecord.providerData.forEach((provider) => {
-          providers.push(provider.providerId);
-        });
-
-        // Create User document using User Auth data
-        const usersRef = firestore.collection("Users");
-        usersRef.doc(uid).set({
-          uid: uid,
-          Username: user.displayName,
-          User_email: user.email,
-          Email_verified: userRecord.emailVerified,
-          Account_created: userRecord.metadata.creationTime,
-          Last_login: userRecord.metadata.lastSignInTime,
-          Provider_Id: providers,
-          Friend_count: 0,
-          Friends: [],
-          Planet_count: 0,
-          Planets: {},
-        }).then( () => {
-          // Return user data and auth token
-          res.status(200).send({
-            displayName: user.displayName,
-            uid: uid,
-            authToken: authToken,
-          });
-        }
-        );
       })
       .catch((error) => {
         let errorResponse = {};
@@ -209,7 +182,7 @@ app.post("/api/auth/user/signup", (req, res) => {
             break;
 
           default:
-            errorResponse = {error: error.code };
+            errorResponse = {error: error.code};
         }
         res.status(500).send(errorResponse);
       });
@@ -395,3 +368,41 @@ app.get("/api/db/planet/:planet/Zones", (req, res) => {
 
 
 exports.app = functions.https.onRequest(app);
+// Create User Document in Users Collection on creation of new user
+exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
+  let userData = {};
+  const uid = userRecord.uid;
+
+  // Get Auth Provider IDs
+  const providers = [];
+  userRecord.providerData.forEach((provider) => {
+    providers.push(provider.providerId);
+  });
+
+  // Create User document using User Auth data
+  const usersRef = firestore.collection("Users");
+
+  usersRef.doc(uid).set({
+    uid: uid,
+    Username: userRecord.displayName,
+    User_email: userRecord.email,
+    Email_verified: userRecord.emailVerified,
+    Account_created: userRecord.metadata.creationTime,
+    Last_login: userRecord.metadata.lastSignInTime,
+    Provider_Id: providers,
+    Friend_count: 0,
+    Friends: [],
+    Planet_count: 0,
+    Planets: {},
+  })
+      .then( () => {
+        // Return user data and auth token
+        userData = {
+          uid,
+          email: userRecord.email,
+          displayName: userRecord.displayName,
+        };
+        console.log({function: userData});
+        return userData;
+      });
+});
