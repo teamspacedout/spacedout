@@ -284,7 +284,78 @@ app.delete("/api/db/planet/:planet", (req, res) => {});
 
 /** DB endpoint: Creates a new planet document
  */
-app.post("/api/db/createPlanet", (req, res) => {});
+app.post("/api/db/createPlanet", (req, res) => {
+  const uid = req.body.uid;
+  const userRef = firestore.doc(`Users/${uid}`);
+  const zoneName = req.body.zoneName;
+  const zoneDescription = req.body.zoneDescription;
+  const planetName = req.body.planetName;
+  const planetTags = req.body.planetTags;
+  let userPlanetCount = -1;
+  let planets = {};
+  userRef.get().then((data) => {
+    userPlanetCount = data.data().Planet_count;
+    planets = data.data().Planets;
+  }).catch((error) => {
+    res.send({Error: "User does not exist!"});
+  });
+
+  // Create Planet object for Planet Document
+  const planet = {
+    User_uid: uid,
+    User_ref: userRef.path,
+    Planet_name: planetName,
+    Planet_image: "",
+    Planet_tags: planetTags,
+    Zone_count: 1,
+    Zones_info: [
+      {
+        Zone_name: zoneName,
+        Zone_description: zoneDescription,
+      },
+    ],
+  };
+  // Create Zone object for Zone Document
+  const zone = {
+    User_uid: planet.User_uid,
+    Zone_name: req.body.zoneName,
+    Zone_description: req.body.zoneDescription,
+    ZoneContent_count: 0,
+  };
+
+
+  // Get User's Planet document
+  const planetRef = firestore.collection("Planets").doc();
+  const planetRefID = planetRef.id;
+  planetRef.set(planet).then(() => {
+    const zoneRef = planetRef.collection("Zones").doc();
+    zoneRef.set(zone).then(() => {
+      const planetCount = userPlanetCount + 1;
+
+      const userPlanet = {
+        Planet_id: planetRefID,
+        Planet_ref: planetRef.path,
+        Planet_name: planet.Planet_name,
+        Planet_image: planet.Planet_image,
+        Zone_count: planet.Zone_count,
+      };
+      planets[userPlanet.Planet_id] = userPlanet;
+
+      const updatedUserData = {
+        Planets: planets,
+        Planet_count: planetCount,
+      };
+
+      userRef.update(updatedUserData)
+          .then(() => {
+            res.status(200).send({Planet: planet, Zone: zone, Status: "Created"});
+          });
+    });
+  })
+      .catch((error) => {
+        res.status(500).send({error: error.code});
+      });
+});
 
 
 exports.app = functions.https.onRequest(app);
