@@ -1,5 +1,4 @@
 import './App.css';
-import { fireAuth, fireDB, fireStorage, fireLytics } from "./firebase";
 import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import Root from "./routes/Root";
 import {Background} from "./components/Background";
@@ -10,6 +9,10 @@ import SignUp from "./routes/SignUp";
 import PlanetPage from "./routes/PlanetPage";
 import UserPage from "./routes/UserPage";
 import Freeroam from "./routes/Freeroam";
+import EditPlanet from "./routes/EditPlanet";
+import Settings from "./routes/Settings";
+import Footer from "./components/Footer";
+import React from "react";
 
 
 const router = createBrowserRouter([{
@@ -38,7 +41,16 @@ const router = createBrowserRouter([{
     {
         path: "/",
         element: <Root />,
-    },])
+    },
+    {
+        path: "/:user/edit",
+        element: <EditPlanet />,
+    },
+    {
+        path: "/settings",
+        element: <Settings />,
+    },
+])
 
 
 function App() {
@@ -49,7 +61,7 @@ const data = useUserAuth();
     <>
         <UserLogin.Provider value = {data}>
             <Background/>
-        <RouterProvider router={router} />
+            <RouterProvider router={router} />
         </UserLogin.Provider>
     </>
   );
