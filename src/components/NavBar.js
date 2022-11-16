@@ -21,7 +21,8 @@ function NavBar() {
                 <Link to = '/' className="btn btn-ghost text-white normal-case text-xl">Spaced Out</Link>
             </div>
             { !user ? <SignIn/> : <SignOut/> }
-            <div className="justify-items-end dropdown dropdown-end">
+            { user &&
+                <div className="justify-items-end dropdown dropdown-end">
                 <label tabIndex="0" className="btn btn-ghost btn-circle avatar">
                     <div className="w-10 rounded-full">
                         <img alt='ice planet TEMP' src="/assests/IcePlanet.png"/>
@@ -36,6 +37,7 @@ function NavBar() {
                     <li> <Link to= '/'>Logout</Link></li>
                 </ul>
             </div>
+            }
         </div>
     );
 

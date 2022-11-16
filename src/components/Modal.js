@@ -1,8 +1,9 @@
-import React from "react";
+import React, {useContext, useState} from "react";
 import {fireAuth, GoogleAuthProvider} from "../firebase";
 import {signInWithPopup} from "firebase/auth";
 
 function Modal() {
+
     return (
         <div className="modal modal-bottom sm:modal-middle">
 
@@ -32,6 +33,7 @@ function SignIn() {
 
     const googleLogin = async () => {
         await signInWithPopup(fireAuth, logIn);
+
     }
 
     return (
