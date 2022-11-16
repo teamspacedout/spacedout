@@ -9,7 +9,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup, createUserWithEmailAndPassword} from "firebase/auth";
 
 // For Firebase Cloud Firestore (Firestore DB)
-import { getFirestore, collection, doc, getDoc, query, onSnapshot} from "firebase/firestore";
+import { getFirestore, collection, doc, getDoc, query, onSnapshot, setDoc} from "firebase/firestore";
 
 // For Firebase Cloud Storage
 import { getStorage } from "firebase/storage";
@@ -47,6 +47,5 @@ export const fireDB = getFirestore(fireApp);
 export const fireStorage = getStorage(fireApp);
 export const fireLytics = getAnalytics(fireApp);
 export const fireFunctions = getFunctions(fireApp);
-
-export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider};
+export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider, setDoc};
 

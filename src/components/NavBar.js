@@ -8,8 +8,6 @@ function NavBar() {
 
     const {user, username} = useContext(UserLogin);
 
-    console.log(user, username);
-
     return (
         <div className="navbar absolute">
 
@@ -21,7 +19,8 @@ function NavBar() {
                 <Link to = '/' className="btn btn-ghost text-white normal-case text-xl">Spaced Out</Link>
             </div>
             { !user ? <SignIn/> : <SignOut/> }
-            <div className="justify-items-end dropdown dropdown-end">
+            { user &&
+                <div className="justify-items-end dropdown dropdown-end">
                 <label tabIndex="0" className="btn btn-ghost btn-circle avatar">
                     <div className="w-10 rounded-full">
                         <img alt='ice planet TEMP' src="/assests/IcePlanet.png"/>
@@ -29,13 +28,14 @@ function NavBar() {
                 </label>
                 <ul tabIndex="0"
                     className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
-                    <li> <Link to={user ? `/${user.uid}` : '/404'}> My Planet </Link> </li>
-                    <li> <Link to= {user ? `/${user.uid}/edit` : '/404' }> Edit Planet </Link> </li>
+                    <li> <Link to={user ? `/${username}` : '/404'}> My Planets </Link> </li>
+                    <li> <Link to= {user ? `/${username}/edit` : '/404' }> Edit Planets </Link> </li>
                     <li> <Link to='/freeroam'> Free-Roam </Link> </li>
                     <li> <Link to= '/'>Settings</Link></li>
                     <li> <Link to= '/'>Logout</Link></li>
                 </ul>
             </div>
+            }
         </div>
     );
 
