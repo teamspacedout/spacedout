@@ -82,12 +82,12 @@ app.get("/api", (req, res) => {
 
 /** Auth endpoint: Queries Firebase Auth for a list of users
  * @return: Returns an array of UserRecord Auth objects
- * Currently limits request to 50 users
+ * Currently limits request to 100 users
  */
 app.get("/api/auth/users", (req, res) => {
   const usersList = [];
   auth
-      .listUsers(50)
+      .listUsers(100)
       .then((listUsersResult) => {
         listUsersResult.users.forEach((userRecord) => {
           const strippedRecord = {
@@ -109,9 +109,17 @@ app.get("/api/auth/users", (req, res) => {
 });
 
 /** Auth endpoint: Queries Firebase Auth for a specific user
- * @return: Returns an UserRecord Auth object
+ * @param req
+ * @return { UserRecord } Returns an UserRecord Auth object
  */
-app.get("/api/auth/user/:user", (req, res) => {});
+app.get("/api/auth/user/:user", (req, res) => {
+  const userId = req.params.user;
+  auth.getUser(userId).then((userRecord) => {
+    res.status(200).send(userRecord);
+  }).catch((error) => {
+    res.status(400).send(error.code);
+  });
+});
 
 /** Auth endpoint: Updates Firebase Auth for a specific user
  * @return: Returns an UserRecord Auth object
@@ -216,14 +224,20 @@ app.get("/api/db/users", (req, res) => {
         });
         res.status(200).send(usersDocuments);
       }).catch((error) => {
-        console.log("Error: ", error);
         res.status(400).send(error);
       });
 });
 
 /** DB endpoint: Queries the database for a specific user
  */
-app.get("/api/db/user/:user", (req, res) => {});
+app.get("/api/db/user/:user", (req, res) => {
+  const userId = req.params.user;
+  firestore.doc(`Users/${userId}`).get().then((userDoc) => {
+    res.status(200).send(userDoc.data());
+  }).catch((error) => {
+    res.status(400).send({error: error.code});
+  });
+});
 
 /** DB endpoint: Updates document for a specific user
  */
@@ -246,7 +260,7 @@ app.get("/api/db/planets", (req, res) => {
         res.status(200).send(planetsDocuments);
       })
       .catch((error) => {
-        console.log("Error: ", error);
+        res.status(400).send({Error: error.code});
       });
 });
 
@@ -370,14 +384,7 @@ app.get("/api/db/planet/:planet/Zones", (req, res) => {
 exports.app = functions.https.onRequest(app);
 // Create User Document in Users Collection on creation of new user
 exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
-  let userData = {};
   const uid = userRecord.uid;
-
-  // Get Auth Provider IDs
-  const providers = [];
-  userRecord.providerData.forEach((provider) => {
-    providers.push(provider.providerId);
-  });
 
   // Create User document using User Auth data
   const usersRef = firestore.collection("Users");
@@ -385,24 +392,21 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
   usersRef.doc(uid).set({
     uid: uid,
     Username: userRecord.displayName,
-    User_email: userRecord.email,
-    Email_verified: userRecord.emailVerified,
-    Account_created: userRecord.metadata.creationTime,
-    Last_login: userRecord.metadata.lastSignInTime,
-    Provider_Id: providers,
     Friend_count: 0,
     Friends: [],
     Planet_count: 0,
     Planets: {},
   })
-      .then( () => {
+      .then( (writeResult) => {
         // Return user data and auth token
-        userData = {
+        const userData = {
           uid,
           email: userRecord.email,
           displayName: userRecord.displayName,
+          createdAt: writeResult.writeTime.toDate(),
         };
-        console.log({function: userData});
         return userData;
+      }).catch((error) => {
+        console.error({Error: error.code});
       });
 });
