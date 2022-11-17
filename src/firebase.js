@@ -6,16 +6,19 @@
 import { initializeApp } from "firebase/app";
 
 // For Firebase Authentication
-import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup, createUserWithEmailAndPassword} from "firebase/auth";
+import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup, createUserWithEmailAndPassword, connectAuthEmulator } from "firebase/auth";
 
 // For Firebase Cloud Firestore (Firestore DB)
-import { getFirestore, collection, doc, getDoc, query, onSnapshot, setDoc} from "firebase/firestore";
+import { getFirestore, collection, doc, getDoc, query, onSnapshot, setDoc, connectFirestoreEmulator } from "firebase/firestore";
 
 // For Firebase Cloud Storage
-import { getStorage } from "firebase/storage";
+import { getStorage , connectStorageEmulator } from "firebase/storage";
 
 // For Firebase Analytics
 import { getAnalytics } from "firebase/analytics";
+
+// For Firebase Cloud Functions
+import { getFunctions , connectFunctionsEmulator } from "firebase/functions";
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -42,5 +45,17 @@ export const fireAuth = getAuth(fireApp);
 export const fireDB = getFirestore(fireApp);
 export const fireStorage = getStorage(fireApp);
 export const fireLytics = getAnalytics(fireApp);
+export const fireFunctions = getFunctions(fireApp);
 export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider, setDoc};
+
+
+
+// Connect Development Emulators
+if (process.env.NODE_ENV === "development") {
+  connectAuthEmulator(fireAuth, "http://localhost:9099");
+  connectFirestoreEmulator(fireDB, "http://localhost:8080");
+  connectStorageEmulator(fireStorage, "http://localhost:9199");
+  connectFunctionsEmulator(fireFunctions,"http://localhost:5001");
+  console.log(process.env.NODE_ENV, "Running emulators!");
+}
 
