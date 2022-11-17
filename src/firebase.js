@@ -20,7 +20,6 @@ import { getAnalytics } from "firebase/analytics";
 // For Firebase Cloud Functions
 import { getFunctions , connectFunctionsEmulator } from "firebase/functions";
 
-
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
@@ -52,10 +51,11 @@ export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider, setDoc};
 
 
 // Connect Development Emulators
-if (process.env.NODE_ENV) {
+if (process.env.NODE_ENV === "development") {
   connectAuthEmulator(fireAuth, "http://localhost:9099");
   connectFirestoreEmulator(fireDB, "http://localhost:8080");
   connectStorageEmulator(fireStorage, "http://localhost:9199");
   connectFunctionsEmulator(fireFunctions,"http://localhost:5001");
   console.log(process.env.NODE_ENV, "Running emulators!");
 }
+
