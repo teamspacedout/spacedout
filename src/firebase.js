@@ -9,7 +9,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, connectAuthEmulator } from "firebase/auth";
 
 // For Firebase Cloud Firestore (Firestore DB)
-import { getFirestore, collection, doc, getDoc, query, onSnapshot, setDoc, connectFirestoreEmulator } from "firebase/firestore";
+import { getFirestore, collection, doc, getDoc, query, onSnapshot, setDoc, connectFirestoreEmulator , initializeFirestore } from "firebase/firestore";
 
 // For Firebase Cloud Storage
 import { getStorage , connectStorageEmulator } from "firebase/storage";
@@ -39,10 +39,9 @@ const appName = "Spaced Out - Web";
 //Initialization of Firebase application with configuration data and custom application name
 const fireApp = initializeApp(firebaseConfig, appName);
 
-
 // Initialization and exportation of Firebase Products used in the application
 export const fireAuth = getAuth(fireApp);
-export const fireDB = getFirestore(fireApp);
+export const fireDB = (process.env.NODE_ENV === "development") ? initializeFirestore(fireApp, {experimentalForceLongPolling : true}) : getFirestore(fireApp);
 export const fireStorage = getStorage(fireApp);
 export const fireLytics = getAnalytics(fireApp);
 export const fireFunctions = getFunctions(fireApp);
