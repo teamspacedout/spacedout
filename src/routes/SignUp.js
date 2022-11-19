@@ -22,8 +22,6 @@ function SignUp() {
          */
         const email = e.target.email.value;
         const password = e.target.password.value;
-        const username = e.target.name.value;
-        const db = fireDB;
         const auth = fireAuth;
 
 
@@ -31,18 +29,13 @@ function SignUp() {
 
             try {
                 const user = await createUserWithEmailAndPassword(auth, email, password);
-                const data = {
-                    name: username,
-                };
-
-                await setDoc(doc(db, 'Usernames', user.user.uid), data);
+                console.log(user);
 
                 return navigate("/");
             } catch (e) {
                 console.log(e.toString())
                 console.log("There was an error trying to create your account");
             }
-
         }
         MakeAccount();
     }

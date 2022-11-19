@@ -6,23 +6,22 @@ import { getFirestore } from 'firebase/firestore';
  * terminated by the system
  */
 
-
-require('dotenv').config();
-
+const dotenv = require("dotenv");
+dotenv.config();
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const {Logging} = require("@google-cloud/logging");
+//const {Logging} = require("@google-cloud/logging");
+
 const express = require("express");
 const app = express();
 const cors = require("cors")({origin: true});
-
 
 const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
 console.log(projectID);
 
 // Initialization
-const logging = new Logging();
-const log = logging.log("Initialization");
+//const logging = new Logging();
+//const log = logging.log("Initialization");
 
 // Create data for Cloud Logging log
 const METADATA = {
@@ -41,15 +40,11 @@ const messageData = {
 };
 
 // Write log to Cloud Logging
-const entry = log.entry(METADATA, messageData);
-log.write(entry);
+//const entry = log.entry(METADATA, messageData);
+//log.write(entry);
 
 // Initialize App using Admin SDK
-const fireApp = admin.initializeApp({
-  credential: admin.credential.applicationDefault(),
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-});
-
+const fireApp = admin.initializeApp();
 functions.logger.log(`Started => Project: ${projectID}, Name: ${fireApp.name}`);
 
 // Create SDK references

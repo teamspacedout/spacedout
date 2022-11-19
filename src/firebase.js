@@ -6,7 +6,7 @@
 import { initializeApp } from "firebase/app";
 
 // For Firebase Authentication
-import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithPopup, createUserWithEmailAndPassword, connectAuthEmulator } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, EmailAuthCredential, EmailAuthProvider, signInWithEmailAndPassword, signInWithPopup, createUserWithEmailAndPassword, connectAuthEmulator } from "firebase/auth";
 
 // For Firebase Cloud Firestore (Firestore DB)
 import { getFirestore, collection, doc, getDoc, query, onSnapshot, setDoc, connectFirestoreEmulator } from "firebase/firestore";
@@ -46,7 +46,7 @@ export const fireDB = getFirestore(fireApp);
 export const fireStorage = getStorage(fireApp);
 export const fireLytics = getAnalytics(fireApp);
 export const fireFunctions = getFunctions(fireApp);
-export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider, setDoc};
+export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider, setDoc, EmailAuthProvider, signInWithPopup, signInWithEmailAndPassword};
 
 
 
