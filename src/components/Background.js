@@ -28,7 +28,8 @@ export const Background = () => {
                 left: 0,
                 width: "100%",
                 height: "100%",
-                opacity:.5}}
+                opacity:.5,
+                "z-index": -1,}}
             options={{
                 fullScreen: {
                     enable: true,
