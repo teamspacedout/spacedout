@@ -143,20 +143,23 @@ app.put("/api/auth/user/:user", (req, res) => {
 
   // Check if data is undefined
   let isDataEmpty = true;
-  Object.values(updatedAuthData).every((property) => {
-    if (property !== undefined) {
+
+  for (const key in updatedAuthData) {
+    if (updatedAuthData[key] !== undefined) {
       isDataEmpty = false;
     }
-  });
+  }
 
   if (isDataEmpty) {
     res.status(500).send({Error: "No valid data was sent in this request"});
     return;
   }
 
+
   auth.getUser(uid).then((userRecord) => {
     if (updatedAuthData.displayName && updatedAuthData.displayName !== userRecord.displayName) {
       const newUsername = updatedAuthData.displayName;
+      const oldUsername = userRecord.displayName;
       const usernameRef = firestore.collection("Usernames");
       // Check if new displayName is not taken
       usernameRef.doc(newUsername).get()
@@ -175,16 +178,27 @@ app.put("/api/auth/user/:user", (req, res) => {
                   uid,
                   Username: updatedAuthData.displayName,
                 }).then((usernameWriteResult) => {
-                  const writeTime = {
-                    userWriteResult: userWriteResult.writeTime.toDate(),
-                    usernameWriteResult: usernameWriteResult.writeTime.toDate(),
-                  };
-                  console.log(writeTime);
+                  usernameRef.doc(oldUsername).delete()
+                      .finally((usernameDeleteResult) => {
+                        const writeTime = {
+                          userWriteResult: userWriteResult.writeTime.toDate(),
+                          usernameWriteResult: usernameWriteResult.writeTime.toDate(),
+                          usernameDeleteResult: usernameDeleteResult.writeTime.toDate(),
+                        };
+                        console.log(writeTime);
+                      });
                 });
               });
             }
             return usernameDoc;
           });
+    }
+
+    for (const key in updatedAuthData) {
+      if (updatedAuthData[key] === userRecord[key] && userRecord[key] !== undefined) {
+        res.status(500).send({Error: `This ${key} is already set for this user`});
+        return;
+      }
     }
     // Update user record
     auth.updateUser(uid, updatedAuthData).then((updatedUserRecord) => {
@@ -221,6 +235,10 @@ app.put("/api/auth/user/:user", (req, res) => {
           errorResponse = {Error: "Email address is invalid"};
           break;
 
+        case "auth/invalid-phone-number":
+          errorResponse = {Error: "Phone number is invalid"};
+          break;
+
         case "auth/operation-not-allowed":
           errorResponse = {Error: "Update failed, operation not permitted"};
           break;
@@ -252,6 +270,10 @@ app.put("/api/auth/user/:user", (req, res) => {
 
       case "auth/invalid-email":
         errorResponse = {Error: "Email address is invalid"};
+        break;
+
+      case "auth/invalid-phone-number":
+        errorResponse = {Error: "Phone number is invalid"};
         break;
 
       case "auth/operation-not-allowed":
