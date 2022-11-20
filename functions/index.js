@@ -110,8 +110,8 @@ app.get("/api/auth/users", (req, res) => {
 
 
 /** Auth endpoint: Queries Firebase Auth for a specific user
- * @param req
- * @return { UserRecord } Returns an UserRecord Auth object
+ * @param req.params.user: {uid}
+ * @return userRecord:  Returns an UserRecord Auth object
  */
 app.get("/api/auth/user/:user", (req, res) => {
   const userId = req.params.user;
@@ -123,9 +123,152 @@ app.get("/api/auth/user/:user", (req, res) => {
 });
 
 /** Auth endpoint: Updates Firebase Auth for a specific user
- * @return: Returns an UserRecord Auth object
+ * @param req: req.params.user: The auth uid of the user
+ * @param req: req.body: The data to update the auth record with
+ * req.body can update the following properties:
+ * {email, phoneNumber, emailVerified, password, displayName, photoUrl, disabled}
+ * @return: Returns { Status, updatedUserRecord }
  */
-app.put("/api/auth/user/:user", (req, res) => {});
+app.put("/api/auth/user/:user", (req, res) => {
+  const uid = req.params.user;
+  const updatedAuthData = {
+    email: undefined || req.body.email,
+    phoneNumber: undefined || req.body.phoneNumber,
+    emailVerified: undefined || req.body.emailVerified,
+    password: undefined || req.body.password,
+    displayName: undefined || req.body.displayName,
+    photoURL: undefined || req.body.photoURL,
+    disabled: undefined || req.body.disabled,
+  };
+
+  // Check if data is undefined
+  let isDataEmpty = true;
+  Object.values(updatedAuthData).every((property) => {
+    if (property !== undefined) {
+      isDataEmpty = false;
+    }
+  });
+
+  if (isDataEmpty) {
+    res.status(500).send({Error: "No valid data was sent in this request"});
+    return;
+  }
+
+  auth.getUser(uid).then((userRecord) => {
+    if (updatedAuthData.displayName && updatedAuthData.displayName !== userRecord.displayName) {
+      const newUsername = updatedAuthData.displayName;
+      const usernameRef = firestore.collection("Usernames");
+      // Check if new displayName is not taken
+      usernameRef.doc(newUsername).get()
+          .then((usernameDoc) => {
+            if (usernameDoc.exists) {
+              updatedAuthData.displayName = userRecord.displayName;
+              res.status(500).send({Error: "Username is already taken."});
+              return;
+            } else {
+              // Username is not taken. Update both Users and Usernames docs
+              const userRef = firestore.collection("Users");
+              userRef.doc(uid).update({
+                Username: newUsername,
+              }).then((userWriteResult) => {
+                usernameRef.doc(updatedAuthData.displayName).set({
+                  uid,
+                  Username: updatedAuthData.displayName,
+                }).then((usernameWriteResult) => {
+                  const writeTime = {
+                    userWriteResult: userWriteResult.writeTime.toDate(),
+                    usernameWriteResult: usernameWriteResult.writeTime.toDate(),
+                  };
+                  console.log(writeTime);
+                });
+              });
+            }
+            return usernameDoc;
+          });
+    }
+    // Update user record
+    auth.updateUser(uid, updatedAuthData).then((updatedUserRecord) => {
+      const result = {
+        Status: "Successful",
+        updatedUserRecord: {
+          uid: undefined || updatedUserRecord.uid,
+          email: undefined || updatedUserRecord.email,
+          phoneNumber: undefined || updatedUserRecord.phoneNumber,
+          emailVerified: undefined || updatedUserRecord.emailVerified,
+          displayName: undefined || updatedUserRecord.displayName,
+          photoURL: undefined || updatedUserRecord.photoURL,
+          disabled: undefined || updatedUserRecord.disabled,
+        },
+      };
+      res.status(200).send({result});
+      return;
+    }).catch((error) => {
+      let errorResponse = {};
+
+      switch (error.code) {
+        case "auth/user-not-found":
+          errorResponse = {Error: "No valid user was found"};
+          break;
+        case "auth/email-already-in-use":
+          errorResponse = {Error: "Email address is already in use"};
+          break;
+
+        case "auth/email-already-exists":
+          errorResponse = {Error: "Email address is already in use"};
+          break;
+
+        case "auth/invalid-email":
+          errorResponse = {Error: "Email address is invalid"};
+          break;
+
+        case "auth/operation-not-allowed":
+          errorResponse = {Error: "Update failed, operation not permitted"};
+          break;
+
+        case "auth/weak-password":
+          errorResponse = {Error: "Password is not strong enough"};
+          break;
+
+        default:
+          errorResponse = {error: error.code};
+      }
+      res.status(500).send(errorResponse);
+      return;
+    });
+  }).catch((error) => {
+    let errorResponse = {};
+
+    switch (error.code) {
+      case "auth/user-not-found":
+        errorResponse = {Error: "No valid user was found"};
+        break;
+      case "auth/email-already-in-use":
+        errorResponse = {Error: "Email address is already in use"};
+        break;
+
+      case "auth/email-already-exists":
+        errorResponse = {Error: "Email address is already in use"};
+        break;
+
+      case "auth/invalid-email":
+        errorResponse = {Error: "Email address is invalid"};
+        break;
+
+      case "auth/operation-not-allowed":
+        errorResponse = {Error: "Update failed, operation not permitted"};
+        break;
+
+      case "auth/weak-password":
+        errorResponse = {Error: "Password is not strong enough"};
+        break;
+
+      default:
+        errorResponse = {error: error.code};
+    }
+    res.status(500).send(errorResponse);
+    return;
+  });
+});
 
 /** Auth endpoint: Deletes Firebase Auth for a specific user
  * @return: Returns an object containing success state
