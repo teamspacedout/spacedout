@@ -108,6 +108,7 @@ app.get("/api/auth/users", (req, res) => {
       });
 });
 
+
 /** Auth endpoint: Queries Firebase Auth for a specific user
  * @param req
  * @return { UserRecord } Returns an UserRecord Auth object
@@ -384,29 +385,70 @@ app.get("/api/db/planet/:planet/Zones", (req, res) => {
 exports.app = functions.https.onRequest(app);
 // Create User Document in Users Collection on creation of new user
 exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
-  const uid = userRecord.uid;
+  const usersRef = firestore.collection("Users");
+  const usernamesRef = firestore.collection("Usernames");
 
   // Create User document using User Auth data
-  const usersRef = firestore.collection("Users");
+  const uid = userRecord.uid;
+  let displayName = "";
+  const defaultBio = "A new explorer!";
 
-  usersRef.doc(uid).set({
-    uid: uid,
-    Username: userRecord.displayName,
-    Friend_count: 0,
-    Friends: [],
-    Planet_count: 0,
-    Planets: {},
-  })
-      .then( (writeResult) => {
-        // Return user data and auth token
-        const userData = {
-          uid,
-          email: userRecord.email,
-          displayName: userRecord.displayName,
-          createdAt: writeResult.writeTime.toDate(),
-        };
-        return userData;
-      }).catch((error) => {
+  // Validate displayName
+  if (userRecord.displayName && userRecord.displayName.trim() !== "") {
+    displayName = userRecord.displayName;
+  } else {
+    displayName = uid;
+    // Update auth displayName
+    auth.updateUser(uid, {displayName: displayName}).then((updatedRecord) => {
+      console.log({updatedRecord});
+    });
+  }
+
+  // Check for unique username
+  usernamesRef.doc(displayName).get()
+      .then((usernameDoc) => {
+        if (usernameDoc.exists) {
+          // Set username to uid
+          displayName = uid;
+        }
+      }).then(() => {
+        // Create Users document
+        usersRef.doc(uid).set({
+          uid: uid,
+          Username: displayName,
+          Friend_count: 0,
+          Friends: [],
+          Planet_count: 0,
+          Profile_data: {
+            Bio: defaultBio,
+          },
+          Profile_settings: {},
+        })
+            .then((writeResult) => {
+              // Return user data and auth token
+              const userData = {
+                uid,
+                email: userRecord.email,
+                displayName: displayName,
+                createdAt: writeResult.writeTime.toDate(),
+              };
+              // Create Usernames document
+              usernamesRef.doc(displayName).set({
+                uid: uid,
+                Username: displayName,
+              }).then((writeResult) => {
+                const usernameData = {
+                  uid,
+                  Username: displayName,
+                  createdAt: writeResult.writeTime.toDate(),
+                };
+
+                console.log({usernameData, userData});
+                return ({usernameData, userData});
+              });
+            });
+      })
+      .catch((error) => {
         console.error({Error: error.code});
       });
 });
