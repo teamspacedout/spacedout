@@ -1,5 +1,4 @@
-/*
-import { getFirestore } from 'firebase/firestore';
+/**
  * Note: Always end an HTTP function with send(),
  * redirect("/api/",(req, res) => {});, or end() to prevent
  * the function from running continuously until forcibly
@@ -7,7 +6,7 @@ import { getFirestore } from 'firebase/firestore';
  */
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
-const {Logging} = require("@google-cloud/logging");
+// const {Logging} = require("@google-cloud/logging");
 
 const express = require("express");
 const app = express();
@@ -17,8 +16,8 @@ const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
 
 
 // Initialization
-const logging = new Logging();
-const log = logging.log("Initialization");
+// const logging = new Logging();
+// const log = logging.log("Initialization");
 
 // Create data for Cloud Logging log
 const METADATA = {
@@ -37,12 +36,12 @@ const messageData = {
 };
 
 // Write log to Cloud Logging
-const entry = log.entry(METADATA, messageData);
-log.write(entry);
+// const entry = log.entry(METADATA, messageData);
+// log.write(entry);
 
 // Initialize App using Admin SDK
 const fireApp = admin.initializeApp();
-functions.logger.log(`Started => Project: ${projectID}, Name: ${fireApp.name}`);
+// functions.logger.log(`Started => Project: ${projectID}, Name: ${fireApp.name}`);
 
 // Create SDK references
 const auth = admin.auth();
@@ -107,7 +106,6 @@ app.get("/api/auth/users", (req, res) => {
         res.status(400).send(error.code);
       });
 });
-
 
 /** Auth endpoint: Queries Firebase Auth for a specific user
  * @param req.params.user: {uid}
@@ -183,7 +181,7 @@ app.put("/api/auth/user/:user", (req, res) => {
                         const writeTime = {
                           userWriteResult: userWriteResult.writeTime.toDate(),
                           usernameWriteResult: usernameWriteResult.writeTime.toDate(),
-                          usernameDeleteResult: usernameDeleteResult.writeTime.toDate(),
+                          usernameDeleteResult: admin.firestore.Timestamp.now().toDate(),
                         };
                         console.log(writeTime);
                       });
@@ -307,23 +305,13 @@ app.delete("/api/auth/user/:user", (req, res) => {
       const username = userRecord.displayName;
 
       auth.deleteUser(uid).then(() => {
-        const usersRef = firestore.collection("Users").doc(uid);
-        const usernamesRef = firestore.collection("Usernames").doc(username);
-
-        // Delete user and username documents
-        firestore.recursiveDelete(usersRef).then(() => {
-          firestore.recursiveDelete(usernamesRef).then(() => {
-            usersRef.delete().then(() => {
-              usernamesRef.delete().then(() => {
-                res.status(200).send({Status: `User with uid: ${uid} and username: ${username} successfully deleted!`});
-                return;
-              });
-            });
-          });
-        }).catch((error) => {
-          res.status(500).send({Error: "User not found"});
-          return;
-        });
+        const responseMessage = {
+          uid,
+          username,
+          Status: "Deleted successfully",
+          deletedAt: admin.firestore.Timestamp.now().toDate(),
+        };
+        res.status(200).send(responseMessage);
       });
     }
   });
@@ -396,20 +384,14 @@ app.post("/api/auth/user/signup", (req, res) => {
 });
 
 
-/** Auth endpoint: Processes user login request
- * @param req: { email, password }
- * @return { authToken }
- */
-app.post("/api/auth/user/login", (req, res) => {});
-
-/** Auth endpoint: Processes user account logout
- * @param req: { authToken }
- * @return { statusMessage }
- */
-app.post("/api/auth/user/logout", (req, res) => {});
-
-
 /** Firebase Firestore Endpoints
+ */
+
+/** Firestore Usernames Collection Endpoints
+ */
+
+
+/** Firestore Users Collection Endpoints
  */
 
 /** DB endpoint: Queries the database for a list of users
@@ -445,6 +427,10 @@ app.put("/api/db/user/:user", (req, res) => {});
 /** DB endpoint: Deletes the document for a specific user
  */
 app.delete("/api/db/user/:user", (req, res) => {});
+
+
+/** Firestore Planets Subcollection Endpoints
+ */
 
 
 /** DB endpoint: Queries the database for a list of planets
@@ -580,8 +566,18 @@ app.get("/api/db/planet/:planet/Zones", (req, res) => {
 });
 
 
+/** Firestore Zones Subcollection Endpoints
+ */
+
+
+/** Firestore ZoneContent Subcollection Endpoints
+ */
+
+
 exports.app = functions.https.onRequest(app);
-// Create User Document in Users Collection on creation of new user
+
+// Creates User Document in Users Collection
+// and Username Document in Usernames Collection on creation of new user
 exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
   const usersRef = firestore.collection("Users");
   const usernamesRef = firestore.collection("Usernames");
@@ -649,4 +645,43 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
       .catch((error) => {
         console.error({Error: error.code});
       });
+});
+
+exports.deleteUserDoc = functions.auth.user().onDelete((userRecord) => {
+  const uid = userRecord.uid;
+  const username = userRecord.displayName;
+  const usersRef = firestore.collection("Users").doc(uid);
+  const usernamesRef = firestore.collection("Usernames").doc(username);
+
+  // Delete user and username documents
+  firestore.recursiveDelete(usersRef).then(() => {
+    firestore.recursiveDelete(usernamesRef).then(() => {
+      usersRef.delete().then(() => {
+        usernamesRef.delete().then(() => {
+          const logMessage = {
+            Status: "Successful user deletion",
+            UsersRecord: "Deleted successfully",
+            UsernamesRecord: "Deleted successfully",
+            DeletedUser: {
+              uid: uid,
+              username: username,
+            },
+            DeletedAt: admin.firestore.Timestamp.now().toDate(),
+          };
+          console.log(logMessage);
+          return;
+        });
+      });
+    });
+  }).catch((error) => {
+    const errorMessage = {
+      Status: "Failed user deletion",
+      Error: {
+        Code: error.code,
+        Message: error.message,
+      },
+    };
+    console.log(errorMessage);
+    return;
+  });
 });
