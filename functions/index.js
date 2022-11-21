@@ -293,9 +293,42 @@ app.put("/api/auth/user/:user", (req, res) => {
 });
 
 /** Auth endpoint: Deletes Firebase Auth for a specific user
+ * Additionally deletes the user's User document and Username
+ * documents recursively
+ * @param req: req.params.user: The auth uid of the user
  * @return: Returns an object containing success state
  */
-app.delete("/api/auth/user/:user", (req, res) => {});
+app.delete("/api/auth/user/:user", (req, res) => {
+  const uid = req.params.user;
+
+  // Validate if user exists
+  auth.getUser(uid).then((userRecord) => {
+    if (userRecord.uid && userRecord.uid === uid) {
+      const username = userRecord.displayName;
+
+      auth.deleteUser(uid).then(() => {
+        const usersRef = firestore.collection("Users").doc(uid);
+        const usernamesRef = firestore.collection("Usernames").doc(username);
+
+        // Delete user and username documents
+        firestore.recursiveDelete(usersRef).then(() => {
+          firestore.recursiveDelete(usernamesRef).then(() => {
+            usersRef.delete().then(() => {
+              usernamesRef.delete().then(() => {
+                res.status(200).send({Status: `User with uid: ${uid} and username: ${username} successfully deleted!`});
+                return;
+              });
+            });
+          });
+        }).catch((error) => {
+          res.status(500).send({Error: "User not found"});
+          return;
+        });
+      });
+    }
+  });
+  return;
+});
 
 /** Auth endpoint: Processes user account signup
  * Creates a User with Firebase Authentication
