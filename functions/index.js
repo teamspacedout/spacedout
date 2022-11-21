@@ -450,18 +450,15 @@ app.get("/api/db/user/:user", (req, res) => {
  */
 app.put("/api/db/user/:user", (req, res) => {});
 
-/** DB endpoint: Deletes the document for a specific user
- */
-app.delete("/api/db/user/:user", (req, res) => {});
-
 
 /** Firestore Planets Subcollection Endpoints
  */
 
 
 /** DB endpoint: Queries the database for a list of planets
+ * under a specific user
  */
-app.get("/api/db/planets", (req, res) => {
+app.get("/api/db/:username/planets", (req, res) => {
   const planetsDocuments = [];
   firestore.collection("Planets").get()
       .then((docs) => {
@@ -476,29 +473,47 @@ app.get("/api/db/planets", (req, res) => {
 });
 
 /** DB endpoint: Queries the database for a specific planet
+ * under a specific user
  */
-app.get("/api/db/planet/:planet", (req, res) => {});
+app.get("/api/db/:username/:planet", (req, res) => {});
 
 /** DB endpoint: Updates document for a specific planet
+ * under a specific user
  */
-app.put("/api/db/planet/:planet", (req, res) => {});
+app.put("/api/db/:username/:planet", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific planet
+ * under a specific user
  */
-app.delete("/api/db/planet/:planet", (req, res) => {});
+app.delete("/api/db/:username/:planet", (req, res) => {});
 
-/** DB endpoint: Creates a new planet document
+/** DB endpoint: Creates a new planet document under a specific user
  * @param req:
  *  {
- *    uid,              (String)
- *    planetName,       (String)
- *    planetImage,      (OPTIONAL)
- *    planetTags,       (Array)
- *    zoneName,         (String)
- *    zoneDescription,  (String)
+ *    planetName,           (String)
+ *    planetImage,          (String) [OPTIONAL]
+ *    planetTags,           (Array)  [OPTIONAL]
  *  }
+ * @return res:
+ * {
+ *    uid,                  (String)
+ *    username,             (String)
+ *    Planet_doc
+ *    {
+ *        doc_id,           (String)
+ *        Creation_time,    (String)
+ *        uid,              (String)
+ *        Username          (String)
+ *        Planet_name,      (String)
+ *        Planet_image,     (String)
+ *        Planet_settings,  (Map)
+ *        Tags,             (Array)
+ *        Zone_count,       (Integer)
+ *        Zones,            (Array)
+ *    },
+ * }
  */
-app.post("/api/db/createPlanet", (req, res) => {
+app.post("/api/db/:username/createPlanet", (req, res) => {
   const uid = req.body.uid;
   const userRef = firestore.doc(`Users/${uid}`);
   const zoneName = req.body.zoneName;
