@@ -600,6 +600,18 @@ app.get("/api/db/planet/:planet/Zones", (req, res) => {
  */
 
 
+
+/** Firestore Group Query Endpoints
+ */
+app.get("/api/db/query/users/:query", () => {});
+
+app.get("/api/db/query/planets/:query", () => {});
+
+app.get("/api/db/query/zones/:query", () => {});
+
+app.get("/api/db/query/zonecontent/:query", () => {});
+
+
 exports.app = functions.https.onRequest(app);
 
 // Creates User Document in Users Collection
