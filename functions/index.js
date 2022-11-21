@@ -81,7 +81,7 @@ app.get("/api", (req, res) => {
 
 
 /** Auth endpoint: Queries Firebase Auth for a list of users
- * @return: Returns an array of UserRecord Auth objects
+ * @return: Array - An array containing the UserRecord Auth objects
  * Currently limits request to 100 users
  */
 app.get("/api/auth/users", (req, res) => {
@@ -112,8 +112,8 @@ app.get("/api/auth/users", (req, res) => {
 });
 
 /** Auth endpoint: Queries Firebase Auth for a specific user
- * @param req.params.user: {uid}
- * @return userRecord:  Returns an UserRecord Auth object
+ * @param req.params: { user: The auth uid of the user }
+ * @return Map - An object containing the UserRecord Auth data
  */
 app.get("/api/auth/user/:user", (req, res) => {
   const userId = req.params.user;
@@ -137,11 +137,11 @@ app.get("/api/auth/user/:user", (req, res) => {
 });
 
 /** Auth endpoint: Updates Firebase Auth for a specific user
- * @param req: req.params.user: The auth uid of the user
- * @param req: req.body: The data to update the auth record with
+ * @param req.params: { user: The auth uid of the user }
+ * @param req.body: The data to update the auth record with
  * req.body can update the following properties:
  * {email, phoneNumber, emailVerified, password, displayName, photoUrl, disabled}
- * @return: Returns { Status, updatedUserRecord }
+ * @return: Map - An object containing success state and updated user data }
  */
 app.put("/api/auth/user/:user", (req, res) => {
   const uid = req.params.user;
@@ -309,8 +309,8 @@ app.put("/api/auth/user/:user", (req, res) => {
 /** Auth endpoint: Deletes Firebase Auth for a specific user
  * Additionally deletes the user's User document and Username
  * documents recursively
- * @param req: req.params.user: The auth uid of the user
- * @return: Returns an object containing success state
+ * @param req.params: { user: The auth uid of the user }
+ * @return: Map - An object containing success state and deleted user data
  */
 app.delete("/api/auth/user/:user", (req, res) => {
   const uid = req.params.user;
@@ -341,13 +341,12 @@ app.delete("/api/auth/user/:user", (req, res) => {
  * Creates a User with Firebase Authentication
  * using Email/Password form-data
  *
- * On successful user Auth creation, a User document
- * is created in Firestore and populated with the user's
- * data and default User document values
+ * On successful user Auth creation, a User and Username document
+ * are created in Firestore and populated with the user's
+ * data and respective default document values
  *
- * @param req: { email, password, displayName }
- *
- * @return: Returns { displayName, uid, authToken }
+ * @param req.body: { email, password, displayName }
+ * @return: Map - { displayName, uid, authToken }
  */
 app.post("/api/auth/user/signup", (req, res) => {
   // Create User Auth object from request data
@@ -411,11 +410,14 @@ app.post("/api/auth/user/signup", (req, res) => {
  */
 
 
-/** DB endpoint: Queries the database for a list of users
+/** DB endpoint: Queries the database for a list of usernames
+ * @return: Array - An array containing the Usernames documents data
  */
 app.get("/api/db/usernames", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific username
+ * @param req.params: { username }
+ * @return Map - An object containing the Username document data
  */
 app.get("/api/db/username/:username", (req, res) => {});
 
@@ -425,6 +427,7 @@ app.get("/api/db/username/:username", (req, res) => {});
 
 
 /** DB endpoint: Queries the database for a list of users
+ * @return: Array - An array containing the Users documents data
  */
 app.get("/api/db/users", (req, res) => {
   const usersDocuments = [];
@@ -440,6 +443,8 @@ app.get("/api/db/users", (req, res) => {
 });
 
 /** DB endpoint: Queries the database for a specific user
+ * @param req.params: { user }
+ * @return Map - An object containing the User document data
  */
 app.get("/api/db/user/:user", (req, res) => {
   const userId = req.params.user;
@@ -451,6 +456,8 @@ app.get("/api/db/user/:user", (req, res) => {
 });
 
 /** DB endpoint: Updates the document for a specific user
+ * @param req.params: { user }
+ * @return Map - An object containing the User document data
  */
 app.put("/api/db/user/:user", (req, res) => {});
 
@@ -461,6 +468,8 @@ app.put("/api/db/user/:user", (req, res) => {});
 
 /** DB endpoint: Queries the database for a list of planets
  * under a specific user
+ * @param req.params: { username }
+ * @return Array - An array containing the Planets documents data
  */
 app.get("/api/db/:username/planets", (req, res) => {
   const planetsDocuments = [];
@@ -478,16 +487,22 @@ app.get("/api/db/:username/planets", (req, res) => {
 
 /** DB endpoint: Queries the database for a specific planet
  * under a specific user
+ * @param req.params: { username, planet }
+ * @return Map - An object containing the Planet document data
  */
 app.get("/api/db/:username/:planet", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific planet
  * under a specific user
+ * @param req.params: { username, planet }
+ * @return Map - An object containing the Planet document data
  */
 app.put("/api/db/:username/:planet", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific planet
  * under a specific user
+ * @param req.params: { username, planet }
+ * @return Map - An object containing the Planet document data
  */
 app.delete("/api/db/:username/:planet", (req, res) => {});
 
@@ -604,16 +619,22 @@ app.get("/api/db/:username/:planet/zones", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific zone
  * under a specific planet under a specific user
+ * @param req.params: { username, planet, zone }
+ * @return Map - An object containing the Zone document data
  */
 app.get("/api/db/:username/:planet/:zone", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific zone
  * under a specific planet under a specific user
+ * @param req.params: { username, planet, zone }
+ * @return Map - An object containing the Zone document data
  */
 app.put("/api/db/:username/:planet/:zone", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific zone
  * under a specific planet under a specific user
+ * @param req.params: { username, planet, zone }
+ * @return Map - An object containing the Zone document data
  */
 app.delete("/api/db/:username/:planet/:zone", (req, res) => {});
 
@@ -653,15 +674,82 @@ app.post("/api/db/:username/:planet/createZone", (req, res) => {});
  */
 
 
+/** DB endpoint: Queries the database for a list of zonecontents
+ * under a specific zone under a specific planet under a specific user
+ * @param req.params: { username, planet, zone }
+ * @return Array - An array containing the ZoneContent documents data
+ */
+app.get("/api/db/:username/:planet/:zone/zonecontents", (req, res) => {});
+
+/** DB endpoint: Queries the database for a specific zonecontent
+  * under a specific zone under a specific planet under a specific user
+  * @param req.params: { username, planet, zone, zonecontent }
+  * @return Map - An object containing the ZoneContent document data
+  */
+app.get("/api/db/:username/:planet/:zone/:zonecontent", (req, res) => {});
+
+/** DB endpoint: Updates the document for a specific zonecontent
+  * under a specific zone under a specific planet under a specific user
+  * @param req.params: { username, planet, zone, zonecontent }
+  * @return Map - An object containing the ZoneContent document data
+  */
+app.put("/api/db/:username/:planet/:zone/:zonecontent", (req, res) => {});
+
+/** DB endpoint: Deletes the document for a specific zonecontent
+  * under a specific zone under a specific planet under a specific user
+  * @param req.params: { username, planet, zone, zonecontent }
+  * @return Map - An object containing the ZoneContent document data
+  */
+app.delete("/api/db/:username/:planet/:zone/:zonecontent", (req, res) => {});
+
+/** DB endpoint: Creates a new zonecontent document under a specific zone
+  * under a specific planet under a specific user
+  * @param req:
+  * {
+  *   username,                     (String)
+  *   planet                        (String)
+  *   zone                          (String)
+  *   contentName,                  (String)
+  *   contentData,                  (Reference) [OPTIONAL]
+  *   contentDescription,           (String) [OPTIONAL]
+  *   contentTags,                  (Array)  [OPTIONAL]
+     * }
+  * @return res:
+  * {
+  *    Username                     (String)
+  *    Planet_name                  (String)
+  *    Zone_name                  (String)
+  *    content_doc
+  *    {
+  *        doc_id,                  (String)
+  *        Creation_time,           (String)
+  *        Content_id,              (String)
+  *        Content_name,            (String)
+  *        Content_description      (String)
+  *        Content_data             (Reference)
+  *        Tags,                    (Array)
+  *    },
+  * }
+  */
+app.post("/api/db/:username/:planet/:zone/createContent", (req, res) => {});
+
+
 /** Firestore Group Query Endpoints
  */
-app.get("/api/db/query/users/:query", () => {});
 
-app.get("/api/db/query/planets/:query", () => {});
 
-app.get("/api/db/query/zones/:query", () => {});
+/** DB endpoint: Queries the Usernames collection,
+ * the Planets and Zones subcollections for a given query
+ * Query will also match the Tags document field
+ * @param req.params: { query }
+ * @return Array - An array containing the matching queried data
+ */
+app.get("/api/db/query/:query", () => {});
 
-app.get("/api/db/query/zonecontent/:query", () => {});
+
+/**
+ * Functions Exports
+ */
 
 
 exports.app = functions.https.onRequest(app);
@@ -737,6 +825,8 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
       });
 });
 
+// Deletes User Document and Subcollections in Users Collection
+// and Username Document in Usernames Collection on deletion of existing user
 exports.deleteUserDoc = functions.auth.user().onDelete((userRecord) => {
   const uid = userRecord.uid;
   const username = userRecord.displayName;
