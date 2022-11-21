@@ -408,6 +408,14 @@ app.post("/api/auth/user/signup", (req, res) => {
 /** Firestore Usernames Collection Endpoints
  */
 
+/** DB endpoint: Queries the database for a list of users
+ */
+app.get("/api/db/usernames", (req, res) => {});
+
+/** DB endpoint: Queries the database for a specific username
+ */
+app.get("/api/db/username/:username", (req, res) => {});
+
 
 /** Firestore Users Collection Endpoints
  */
