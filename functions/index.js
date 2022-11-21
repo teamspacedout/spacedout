@@ -79,6 +79,7 @@ app.get("/api", (req, res) => {
 /** Firebase Authentication Endpoints
  */
 
+
 /** Auth endpoint: Queries Firebase Auth for a list of users
  * @return: Returns an array of UserRecord Auth objects
  * Currently limits request to 100 users
@@ -405,8 +406,10 @@ app.post("/api/auth/user/signup", (req, res) => {
 /** Firebase Firestore Endpoints
  */
 
+
 /** Firestore Usernames Collection Endpoints
  */
+
 
 /** DB endpoint: Queries the database for a list of users
  */
@@ -419,6 +422,7 @@ app.get("/api/db/username/:username", (req, res) => {});
 
 /** Firestore Users Collection Endpoints
  */
+
 
 /** DB endpoint: Queries the database for a list of users
  */
@@ -446,7 +450,7 @@ app.get("/api/db/user/:user", (req, res) => {
   });
 });
 
-/** DB endpoint: Updates document for a specific user
+/** DB endpoint: Updates the document for a specific user
  */
 app.put("/api/db/user/:user", (req, res) => {});
 
@@ -477,7 +481,7 @@ app.get("/api/db/:username/planets", (req, res) => {
  */
 app.get("/api/db/:username/:planet", (req, res) => {});
 
-/** DB endpoint: Updates document for a specific planet
+/** DB endpoint: Updates the document for a specific planet
  * under a specific user
  */
 app.put("/api/db/:username/:planet", (req, res) => {});
@@ -586,34 +590,67 @@ app.post("/api/db/:username/createPlanet", (req, res) => {
       });
 });
 
-/** DB endpoint: Queries the database for a list of
- * zones in the Zones Subcollection of a specific Planet
- * @param req: { planet } - The Document ID of the planet
- * @return Array - An array containing the Zones documents data
- */
-app.get("/api/db/planet/:planet/Zones", (req, res) => {
-  const planetZonesDocuments = [];
-  const planetId = req.params.planet;
-  firestore.collection(`Planets/${planetId}/Zones`).get()
-      .then((docs) => {
-        docs.forEach((doc) => {
-          planetZonesDocuments.push(doc.data());
-        });
-        res.status(200).send(planetZonesDocuments);
-      })
-      .catch((error) => {
-        res.status(500).send({Error: error.code});
-      });
-});
-
 
 /** Firestore Zones Subcollection Endpoints
  */
 
 
+/** DB endpoint: Queries the database for a list of zones
+ * under a specific planet under a specific user
+ * @param req: { username, planet }
+ * @return Array - An array containing the Zones documents data
+ */
+app.get("/api/db/:username/:planet/zones", (req, res) => {});
+
+/** DB endpoint: Queries the database for a specific zone
+ * under a specific planet under a specific user
+ */
+app.get("/api/db/:username/:planet/:zone", (req, res) => {});
+
+/** DB endpoint: Updates the document for a specific zone
+ * under a specific planet under a specific user
+ */
+app.put("/api/db/:username/:planet/:zone", (req, res) => {});
+
+/** DB endpoint: Deletes the document for a specific zone
+ * under a specific planet under a specific user
+ */
+app.delete("/api/db/:username/:planet/:zone", (req, res) => {});
+
+/** DB endpoint: Creates a new zone document under a specific planet
+ * under a specific user
+ * @param req:
+ *  {
+ *    username,                 (String)
+ *    planet                    (String)
+ *    zoneName,                 (String)
+ *    zoneImage,                (String) [OPTIONAL]
+ *    zoneDescription,          (String) [OPTIONAL]
+ *    zoneTags,                 (Array)  [OPTIONAL]
+ *  }
+ * @return res:
+ * {
+ *    Username                  (String)
+ *    Planet_name               (String)
+ *    zone_doc
+ *    {
+ *        doc_id,               (String)
+ *        Creation_time,        (String)
+ *        Zone_name,            (String)
+ *        Zone_image,           (String)
+ *        Zone_description      (String)
+ *        Zone_settings,        (Map)
+ *        Tags,                 (Array)
+ *        ZoneContent_count,    (Integer)
+ *        ZoneContent,          (Map)
+ *    },
+ * }
+ */
+app.post("/api/db/:username/:planet/createZone", (req, res) => {});
+
+
 /** Firestore ZoneContent Subcollection Endpoints
  */
-
 
 
 /** Firestore Group Query Endpoints
