@@ -413,7 +413,18 @@ app.post("/api/auth/user/signup", (req, res) => {
 /** DB endpoint: Queries the database for a list of usernames
  * @return: Array - An array containing the Usernames documents data
  */
-app.get("/api/db/usernames", (req, res) => {});
+app.get("/api/db/usernames", (req, res) => {
+  const usernamesDocuments = [];
+  firestore.collection("Usernames").get()
+      .then((docs) => {
+        docs.forEach((doc) => {
+          usernamesDocuments.push(doc.data());
+        });
+        res.status(200).send(usernamesDocuments);
+      }).catch((error) => {
+        res.status(400).send({Error: error.code});
+      });
+});
 
 /** DB endpoint: Queries the database for a specific username
  * @param req.params: { username }
@@ -438,7 +449,7 @@ app.get("/api/db/users", (req, res) => {
         });
         res.status(200).send(usersDocuments);
       }).catch((error) => {
-        res.status(400).send(error);
+        res.status(400).send({Error: error.code});
       });
 });
 
