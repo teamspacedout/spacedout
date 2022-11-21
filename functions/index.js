@@ -89,6 +89,9 @@ app.get("/api/auth/users", (req, res) => {
       .listUsers(100)
       .then((listUsersResult) => {
         listUsersResult.users.forEach((userRecord) => {
+          const providerIds = userRecord.providerData.map((provider) => {
+            return provider.providerId;
+          });
           const strippedRecord = {
             uid: userRecord.uid,
             email: userRecord.email,
@@ -96,7 +99,7 @@ app.get("/api/auth/users", (req, res) => {
             displayName: userRecord.displayName,
             photoUrl: userRecord.photoURL,
             metadata: userRecord.metadata,
-            providerId: userRecord.providerData,
+            providerId: providerIds,
           };
           usersList.push(strippedRecord);
         });
@@ -114,7 +117,19 @@ app.get("/api/auth/users", (req, res) => {
 app.get("/api/auth/user/:user", (req, res) => {
   const userId = req.params.user;
   auth.getUser(userId).then((userRecord) => {
-    res.status(200).send(userRecord);
+    const providerIds = userRecord.providerData.map((provider) => {
+      return provider.providerId;
+    });
+    const userData = {
+      uid: userRecord.uid,
+      email: userRecord.email,
+      emailVerified: userRecord.emailVerified,
+      displayName: userRecord.displayName,
+      disabled: userRecord.disabled,
+      metadata: userRecord.metadata,
+      providerData: providerIds,
+    };
+    res.status(200).send(userData);
   }).catch((error) => {
     res.status(400).send(error.code);
   });
@@ -180,8 +195,8 @@ app.put("/api/auth/user/:user", (req, res) => {
                       .finally((usernameDeleteResult) => {
                         const writeTime = {
                           userWriteResult: userWriteResult.writeTime.toDate(),
-                          usernameWriteResult: usernameWriteResult.writeTime.toDate(),
-                          usernameDeleteResult: admin.firestore.Timestamp.now().toDate(),
+                          newUsernameWriteResult: usernameWriteResult.writeTime.toDate(),
+                          oldUsernameDeleteResult: admin.firestore.Timestamp.now().toDate(),
                         };
                         console.log(writeTime);
                       });
@@ -314,6 +329,9 @@ app.delete("/api/auth/user/:user", (req, res) => {
         res.status(200).send(responseMessage);
       });
     }
+  }).catch((error) => {
+    const errorMessage = `No user with uid: ${uid} was found`;
+    res.status(500).send({Error: errorMessage});
   });
   return;
 });
