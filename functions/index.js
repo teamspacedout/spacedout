@@ -145,91 +145,147 @@ app.get("/api/auth/user/:user", (req, res) => {
  */
 app.put("/api/auth/user/:user", (req, res) => {
   const uid = req.params.user.trim();
-  const updatedAuthData = {
-    email: undefined || req.body.email,
-    phoneNumber: undefined || req.body.phoneNumber,
-    emailVerified: undefined || req.body.emailVerified,
-    password: undefined || req.body.password,
-    displayName: undefined || req.body.displayName,
-    photoURL: undefined || req.body.photoURL,
-    disabled: undefined || req.body.disabled,
+  const updatedAuth = {
+    email: req.body.email ? req.body.email.trim() : undefined,
+    phoneNumber: req.body.phoneNumber ? req.body.phoneNumber.trim() : undefined,
+    emailVerified: req.body.emailVerified ? req.body.emailVerified.trim() : undefined,
+    password: req.body.password ? req.body.password.trim() : undefined,
+    displayName: req.body.displayName ? req.body.displayName.trim() : undefined,
+    photoURL: req.body.photoURL ? req.body.photoURL.trim() : undefined,
+    disabled: req.body.disabled ? req.body.disabled.trim() : undefined,
   };
 
   // Check if data is undefined
   let isDataEmpty = true;
 
-  for (const key in updatedAuthData) {
-    if (updatedAuthData[key] !== undefined) {
+  for (const key in updatedAuth) {
+    if (updatedAuth[key] !== undefined || updatedAuth[key] !== "") {
       isDataEmpty = false;
+    } else {
+      delete updatedAuth[key];
     }
   }
+
 
   if (isDataEmpty) {
-    res.status(500).send({Error: "No valid data was sent in this request"});
-    return;
-  }
+    return res.status(500).send({Error: "No valid data was sent!"});
+  } else {
+    return auth.getUser(uid).then((userRecord) => {
+      const username = userRecord.displayName;
 
+      // Check if username is being updated
+      if (updatedAuth.displayName && updatedAuth.displayName !== username) {
+        const newUsername = updatedAuth.displayName;
+        const oldUsername = userRecord.displayName;
+        const usersRef = firestore.collection("Users");
 
-  auth.getUser(uid).then((userRecord) => {
-    if (updatedAuthData.displayName && updatedAuthData.displayName !== userRecord.displayName) {
-      const newUsername = updatedAuthData.displayName;
-      const oldUsername = userRecord.displayName;
-      const usernameRef = firestore.collection("Usernames");
-      // Check if new displayName is not taken
-      usernameRef.doc(newUsername).get()
-          .then((usernameDoc) => {
-            if (usernameDoc.exists) {
-              updatedAuthData.displayName = userRecord.displayName;
-              res.status(500).send({Error: "Username is already taken."});
-              return;
-            } else {
-              // Username is not taken. Update both Users and Usernames docs
-              const userRef = firestore.collection("Users");
-              userRef.doc(uid).update({
-                Username: newUsername,
-              }).then((userWriteResult) => {
-                usernameRef.doc(updatedAuthData.displayName).set({
-                  uid,
-                  Username: updatedAuthData.displayName,
+        // Check if new displayName is not taken
+        const usernameRef = usersRef.where("Username", "==", newUsername).limit(1);
+        return usernameRef.get()
+            .then((userDoc) => {
+              if (userDoc.docs.length > 0) {
+                updatedAuth.displayName = oldUsername;
+                return {Error: `Username ${newUsername} is already taken.`};
+              } else {
+                // Username is not taken. Update both Users doc
+                return usersRef.doc(uid).update({
+                  Username: newUsername,
+                }).then((userWriteResult) => {
+                  // Update Planets subcollection
+                  const planetsRef = firestore.collection(`Users/${uid}/Planets`);
+                  return planetsRef.get().then((planetsDocs)=>{
+                    return Promise.all(planetsDocs.docs.map((planetDoc) => {
+                      return planetDoc.ref.update({Username: newUsername})
+                          .then((writeResult) => {
+                            const data = {
+                              updatedAt: writeResult.writeTime.toDate(),
+                              Planet_name: planetDoc.data().Planet_name,
+                            };
+                            return data;
+                          });
+                    }));
+                  }).then((records) => {
+                    const userRecord = {
+                      New_Username: updatedAuth.displayName,
+                      Old_Username: oldUsername,
+                      userWriteResult: userWriteResult.writeTime.toDate(),
+                    };
+                    const writeResults = {
+                      userRecord,
+                      planetsRecord: records,
+                    };
+                    return writeResults;
+                  });
                 }).then((usernameWriteResult) => {
-                  usernameRef.doc(oldUsername).delete()
-                      .finally((usernameDeleteResult) => {
-                        const writeTime = {
-                          userWriteResult: userWriteResult.writeTime.toDate(),
-                          newUsernameWriteResult: usernameWriteResult.writeTime.toDate(),
-                          oldUsernameDeleteResult: admin.firestore.Timestamp.now().toDate(),
-                        };
-                        console.log(writeTime);
-                      });
+                  const writeTime = {
+                    userWriteResult: usernameWriteResult.userRecord,
+                    planetsWriteResult: usernameWriteResult.planetsRecord,
+                  };
+                  return writeTime;
                 });
+              }
+            }).then((userUpdateData) => {
+              if (userUpdateData.Error) {
+                return res.status(500).send({userUpdateData});
+              }
+              // Update user record
+              return auth.updateUser(uid, updatedAuth).then((updatedUserRecord) => {
+                const result = {
+                  Status: "Successful",
+                  updatedUserRecord: {
+                    uid: updatedUserRecord.uid,
+                    email: updatedUserRecord.email,
+                    phoneNumber: updatedUserRecord.phoneNumber,
+                    emailVerified: updatedUserRecord.emailVerified,
+                    displayName: updatedUserRecord.displayName,
+                    photoURL: updatedUserRecord.photoURL,
+                    disabled: updatedUserRecord.disabled,
+                  },
+                };
+                return res.status(200).send({result, userUpdateData});
               });
-            }
-            return usernameDoc;
+            });
+      } else {
+        const removedUsername = {displayName: undefined};
+        const strippedAuth = Object.assign({}, updatedAuth, removedUsername);
+        if (Object.values(strippedAuth).every((val) => val === undefined)) {
+          const result = {
+            Status: "Unchanged",
+            Completion_time: admin.firestore.Timestamp.now().toDate(),
+            requestData: updatedAuth,
+            UserRecord: {
+              uid: userRecord.uid,
+              email: userRecord.email,
+              phoneNumber: userRecord.phoneNumber,
+              emailVerified: userRecord.emailVerified,
+              displayName: userRecord.displayName,
+              photoURL: userRecord.photoURL,
+              disabled: userRecord.disabled,
+            },
+          };
+          console.dir({result}, {depth: null});
+          return res.status(200).send({result});
+        } else {
+          return auth.updateUser(uid, updatedAuth).then((updatedUserRecord) => {
+            const result = {
+              Status: "Successful",
+              Completion_time: admin.firestore.Timestamp.now().toDate(),
+              requestData: updatedAuth,
+              updatedUserRecord: {
+                uid: updatedUserRecord.uid,
+                email: updatedUserRecord.email,
+                phoneNumber: updatedUserRecord.phoneNumber,
+                emailVerified: updatedUserRecord.emailVerified,
+                displayName: updatedUserRecord.displayName,
+                photoURL: updatedUserRecord.photoURL,
+                disabled: updatedUserRecord.disabled,
+              },
+            };
+            console.dir({result}, {depth: null});
+            return res.status(200).send({result});
           });
-    }
-
-    for (const key in updatedAuthData) {
-      if (updatedAuthData[key] === userRecord[key] && userRecord[key] !== undefined) {
-        res.status(500).send({Error: `This ${key} is already set for this user`});
-        return;
+        }
       }
-    }
-    // Update user record
-    auth.updateUser(uid, updatedAuthData).then((updatedUserRecord) => {
-      const result = {
-        Status: "Successful",
-        updatedUserRecord: {
-          uid: undefined || updatedUserRecord.uid,
-          email: undefined || updatedUserRecord.email,
-          phoneNumber: undefined || updatedUserRecord.phoneNumber,
-          emailVerified: undefined || updatedUserRecord.emailVerified,
-          displayName: undefined || updatedUserRecord.displayName,
-          photoURL: undefined || updatedUserRecord.photoURL,
-          disabled: undefined || updatedUserRecord.disabled,
-        },
-      };
-      res.status(200).send({result});
-      return;
     }).catch((error) => {
       let errorResponse = {};
 
@@ -267,83 +323,35 @@ app.put("/api/auth/user/:user", (req, res) => {
       res.status(500).send(errorResponse);
       return;
     });
-  }).catch((error) => {
-    let errorResponse = {};
-
-    switch (error.code) {
-      case "auth/user-not-found":
-        errorResponse = {Error: "No valid user was found"};
-        break;
-      case "auth/email-already-in-use":
-        errorResponse = {Error: "Email address is already in use"};
-        break;
-
-      case "auth/email-already-exists":
-        errorResponse = {Error: "Email address is already in use"};
-        break;
-
-      case "auth/invalid-email":
-        errorResponse = {Error: "Email address is invalid"};
-        break;
-
-      case "auth/invalid-phone-number":
-        errorResponse = {Error: "Phone number is invalid"};
-        break;
-
-      case "auth/operation-not-allowed":
-        errorResponse = {Error: "Update failed, operation not permitted"};
-        break;
-
-      case "auth/weak-password":
-        errorResponse = {Error: "Password is not strong enough"};
-        break;
-
-      default:
-        errorResponse = {error: error.code};
-    }
-    res.status(500).send(errorResponse);
-    return;
-  });
+  }
 });
 
 /** Auth endpoint: Deletes Firebase Auth for a specific user
  * Additionally deletes the user's User document and Username
  * documents recursively
- * @param req.params: { user: The username of the user }
+ * @param req.params: { user: The auth uid of the user }
  * @return: Map - An object containing success state and deleted user data
  */
-app.delete("/api/auth/user/:username", (req, res) => {
-  const username = req.params.username.trim();
-  const usersRef = firestore.collection("Users");
-  const userDoc = usersRef.where("Username", "==", username).limit(1);
-  let uid = "";
+app.delete("/api/auth/user/:user", (req, res) => {
+  const uid = req.params.user.trim();
 
-  userDoc.get().then((userDocument) => {
-    if (userDocument.docs.length > 0) {
-      uid = userDocument.docs[0].data().uid;
-    } else {
-      uid = "invalid";
-    }
-    return uid;
-  }).then((foundUid) => {
   // Validate if user exists
-    return auth.getUser(foundUid).then((userRecord) => {
-      if (userRecord.uid && userRecord.uid === foundUid) {
-        const username = userRecord.displayName;
+  return auth.getUser(uid).then((userRecord) => {
+    if (userRecord.uid && userRecord.uid === uid) {
+      const username = userRecord.displayName;
 
-        auth.deleteUser(foundUid).then(() => {
-          const responseMessage = {
-            foundUid,
-            username,
-            Status: "Deleted successfully",
-            deletedAt: admin.firestore.Timestamp.now().toDate(),
-          };
-          return res.status(200).send(responseMessage);
-        });
-      }
-    });
+      auth.deleteUser(uid).then(() => {
+        const responseMessage = {
+          uid,
+          username,
+          Status: "Deleted successfully",
+          deletedAt: admin.firestore.Timestamp.now().toDate(),
+        };
+        return res.status(200).send(responseMessage);
+      });
+    }
   }).catch((error) => {
-    const errorMessage = `No user with Username: ${username} was found`;
+    const errorMessage = `No user with uid: ${uid} was found`;
     console.dir({error}, {depth: null});
     return res.status(500).send({Error: errorMessage});
   });
@@ -363,54 +371,72 @@ app.delete("/api/auth/user/:username", (req, res) => {
 app.post("/api/auth/user/signup", (req, res) => {
   // Create User Auth object from request data
   const user = {
-    email: req.body.email.trim(),
+    email: req.body.email ? req.body.email.trim() : undefined,
     emailVerified: false,
-    password: req.body.password.trim(),
-    displayName: req.body.displayName.trim(),
+    password: req.body.password ? req.body.password.trim() : undefined,
+    displayName: req.body.displayName ? req.body.displayName.trim() : undefined,
   };
 
-  // Create user using Firebase Auth
-  auth.createUser(user)
-      .then((userRecord) => {
+  let isDataInvalid = false;
+  const errorMessage = {};
+
+  for (const key in user) {
+    if (user[key] === undefined || user[key] === "") {
+      isDataInvalid = true;
+      errorMessage[key] = "Invalid or missing value.";
+    }
+  }
+
+  if (isDataInvalid) {
+    return res.status(500).send({Error: errorMessage});
+  } else {
+    // Create user using Firebase Auth
+    return auth.createUser(user)
+        .then((userRecord) => {
         // Create Auth Token for Client
-        const uid = userRecord.uid;
-        auth.createCustomToken(uid).then((data) => {
-          const user = {
-            displayName: userRecord.displayName,
-            uid,
-            authToken: data,
-          };
-          res.status(200).send(user);
+          const uid = userRecord.uid;
+          return auth.createCustomToken(uid).then((data) => {
+            const user = {
+              displayName: userRecord.displayName,
+              uid,
+              authToken: data,
+            };
+            return res.status(200).send(user);
+          });
+        })
+        .catch((error) => {
+          let errorResponse = {};
+          switch (error.code) {
+            case "auth/email-already-in-use":
+              errorResponse = {Error: "Email address is already in use"};
+              break;
+
+            case "auth/email-already-exists":
+              errorResponse = {Error: "Email address is already in use"};
+              break;
+
+            case "auth/invalid-email":
+              errorResponse = {Error: "Email address is invalid"};
+              break;
+
+            case "auth/operation-not-allowed":
+              errorResponse = {Error: "Signup failed, operation not permitted"};
+              break;
+
+            case "auth/weak-password":
+              errorResponse = {Error: "Password is not strong enough"};
+              break;
+
+            case "auth/invalid-password":
+              errorResponse = {Error: "Password is invalid or missing"};
+              break;
+
+            default:
+              errorResponse = {Error: error.code};
+          }
+          return res.status(500).send(errorResponse);
         });
-      })
-      .catch((error) => {
-        let errorResponse = {};
-        switch (error.code) {
-          case "auth/email-already-in-use":
-            errorResponse = {error: "Email address is already in use"};
-            break;
-
-          case "auth/email-already-exists":
-            errorResponse = {error: "Email address is already in use"};
-            break;
-
-          case "auth/invalid-email":
-            errorResponse = {error: "Email address is invalid"};
-            break;
-
-          case "auth/operation-not-allowed":
-            errorResponse = {error: "Sign up failed, operation not permitted"};
-            break;
-
-          case "auth/weak-password":
-            errorResponse = {error: "Password is not strong enough"};
-            break;
-
-          default:
-            errorResponse = {error: error.code};
-        }
-        res.status(500).send(errorResponse);
-      });
+  }
 });
 
 
@@ -443,7 +469,7 @@ app.get("/api/db/users", (req, res) => {
  * @return Map - An object containing the User document data
  */
 app.get("/api/db/user/:username", (req, res) => {
-  const userId = req.params.user.trim();
+  const userId = req.params.username.trim();
   firestore.doc(`Users/${userId}`).get().then((userDoc) => {
     res.status(200).send(userDoc.data());
   }).catch((error) => {
@@ -485,7 +511,19 @@ app.get("/api/db/user/:username/planets", (req, res) => {
     return firestore.collection(`Users/${foundUid}/Planets`).get()
         .then((docs) => {
           docs.forEach((doc) => {
-            planetsDocuments.push(doc.data());
+            const data = {
+              Creation_time: doc.data().Creation_time.toDate(),
+              uid: doc.data().uid,
+              Zone_count: doc.data().Zone_count,
+              Username: doc.data().Username,
+              Planet_name: doc.data().Planet_name,
+              Planet_description: doc.data().Planet_description,
+              Planet_settings: doc.data().Planet_settings,
+              Tags: doc.data().Tags,
+              Planet_image: doc.data().Planet_image,
+              Zones: doc.data().Zones,
+            };
+            planetsDocuments.push(data);
           });
           return res.status(200).send(planetsDocuments);
         });
@@ -590,7 +628,7 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
 
         // Validate unique planet name
         if (planets[validPlanetName]) {
-          const newName = String(Math.floor(Math.random() * 999));
+          const newName = String(Math.floor(Math.random() * 99999));
           validPlanetName = validPlanetName + "_" + newName;
         }
 
@@ -821,9 +859,12 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
   const usernamesRef = usersRef.where("Username", "==", displayName);
 
   return usernamesRef.get().then((usernameDoc) => {
-    if (usernameDoc.exists) {
+    if (usernameDoc.docs.length > 0) {
       // Set username to uid
       displayName = uid;
+      return auth.updateUser(uid, {displayName: uid}).then((updatedUserRecord) => {
+        return updatedUserRecord;
+      });
     }
   }).then(() => {
     // Create Users document
