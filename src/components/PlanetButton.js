@@ -1,8 +1,13 @@
 import React from 'react';
+import {motion} from "framer-motion";
 
 function PlanetButton(props) {
     return (
-        <div className="btn-circle bg-white"></div>
+        <div style={props.futureStyle} className="absolute btn-circle bg-white">
+            <motion.div/>
+
+
+        </div>
     );
 }
 
