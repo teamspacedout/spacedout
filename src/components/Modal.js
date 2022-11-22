@@ -2,11 +2,12 @@ import React, {useContext, useState} from "react";
 import {fireAuth, GoogleAuthProvider, signInWithEmailAndPassword} from "../firebase";
 import {signInWithPopup} from "firebase/auth";
 import {useNavigate} from "react-router-dom";
+import Context from "../lib/context";
 
 function Modal() {
 
     const navigate = useNavigate();
-
+   // const [user, username] = useContext(Context);
 
     const SignInEmail = (e) => {
 
@@ -20,13 +21,19 @@ function Modal() {
 
         try {
             const loginEmail = async () => {
-                await signInWithEmailAndPassword(fireAuth, email, password);
-                return navigate("/");
+                return await signInWithEmailAndPassword(fireAuth, email, password);
             }
+
+            const isLogged = loginEmail();
+
+            return navigate(`/freeroam`);
 
         } catch (e) {
             console.log(e.toString());
+            console.log("This faled:(");
         }
+
+
     }
 
         return (
@@ -35,7 +42,7 @@ function Modal() {
             <label htmlFor="login" className="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
             <h3 className="font-bold text-lg text-center">Log into your account!</h3>
 
-            <form name="login" onSubmit={(e)=>SignInEmail(e)} >
+            <form name="login" onSubmit={SignInEmail} >
 
                 <div className="self-center justify-center align-middle">
                     <label className=" text-white "> Email: <input className=" w-8/12 input input-bordered input-sm my-4 ml-7 text-purple-800" type="email" name="email"/> </label>
