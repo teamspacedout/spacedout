@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {motion} from "framer-motion";
+import PlanetButton from "./PlanetButton";
 
 
 
@@ -64,7 +65,7 @@ function Planet({defaultPlanet, animated, open, style, planetSize, orbitSize, di
         <div style={circleGraph} className="place-self-center ">
                 <div style= {outerCircle}>
                         <div className="grid grid-cols-3 gap-10 grid-flow-row">
-                            <div className="p-5  btn-circle bg-purple-100 col-start-1 col-end-2"></div>
+                            <PlanetButton/>
                             <div className="p-5 -translate-y-10 btn-circle bg-purple-200 col-start-2 col-end-3"></div>
                             <div className="p-5 btn-circle bg-purple-400 col-start-3 col-end-4"></div>
                             <div className="p-5 -translate-x-10 btn-circle bg-purple-500 "></div>
@@ -92,8 +93,8 @@ Planet.defaultProps = {
 
 
 function DefaultPlanet (props) {
-    return <div style={props.futureStyle} className="p-5 scale-150 btn-circle bg-purple-300">
-
+    return <div style={props.futureStyle} className="image-full scale-250 btn-circle shadow-md shadow-purple-200">
+        <img src="/assests/planets/Earth/4.png"/>
     </div>
 }
 export default Planet;
