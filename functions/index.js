@@ -537,7 +537,42 @@ app.get("/api/db/user/:username/planets", (req, res) => {
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.get("/api/db/user/:username/:planet", (req, res) => {});
+app.get("/api/db/user/:username/:planet", (req, res) => {
+  const username = req.params.username.trim();
+  const planetName = req.params.planet.trim();
+  const usersRef = firestore.collection("Users");
+  const userDoc = usersRef.where("Username", "==", username).limit(1);
+  let uid = "";
+
+  return userDoc.get().then((userDocument) => {
+    if (userDocument.docs.length > 0) {
+      uid = userDocument.docs[0].data().uid;
+    } else {
+      uid = "invalid";
+    }
+    return uid;
+  }).then((foundUid) => {
+    const collectionPath = `Users/${foundUid}/Planets`;
+    return firestore.collection(collectionPath).doc(planetName).get()
+        .then((doc) => {
+          const data = {
+            Creation_time: doc.data().Creation_time.toDate(),
+            uid: doc.data().uid,
+            Username: doc.data().Username,
+            Planet_name: doc.data().Planet_name,
+            Planet_description: doc.data().Planet_description,
+            Planet_image: doc.data().Planet_image,
+            Planet_settings: doc.data().Planet_settings,
+            Tags: doc.data().Tags,
+            Zone_count: doc.data().Zone_count,
+            Zones: doc.data().Zones,
+          };
+          return res.status(200).send(data);
+        });
+  }).catch((error)=>{
+    return res.status(400).send({Error: error.code});
+  });
+});
 
 /** DB endpoint: Updates the document for a specific planet
  * under a specific user
