@@ -12,6 +12,7 @@ import Freeroam from "./routes/Freeroam";
 import EditPlanet from "./routes/EditPlanet";
 import Settings from "./routes/Settings";
 import React from "react";
+import NavBar from "./components/NavBar";
 
 
 const router = createBrowserRouter([{
