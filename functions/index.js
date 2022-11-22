@@ -116,7 +116,7 @@ app.get("/api/auth/users", (req, res) => {
  * @return Map - An object containing the UserRecord Auth data
  */
 app.get("/api/auth/user/:user", (req, res) => {
-  const userId = req.params.user;
+  const userId = req.params.user.trim();
   auth.getUser(userId).then((userRecord) => {
     const providerIds = userRecord.providerData.map((provider) => {
       return provider.providerId;
@@ -144,7 +144,7 @@ app.get("/api/auth/user/:user", (req, res) => {
  * @return: Map - An object containing success state and updated user data }
  */
 app.put("/api/auth/user/:user", (req, res) => {
-  const uid = req.params.user;
+  const uid = req.params.user.trim();
   const updatedAuthData = {
     email: undefined || req.body.email,
     phoneNumber: undefined || req.body.phoneNumber,
@@ -309,32 +309,44 @@ app.put("/api/auth/user/:user", (req, res) => {
 /** Auth endpoint: Deletes Firebase Auth for a specific user
  * Additionally deletes the user's User document and Username
  * documents recursively
- * @param req.params: { user: The auth uid of the user }
+ * @param req.params: { user: The username of the user }
  * @return: Map - An object containing success state and deleted user data
  */
-app.delete("/api/auth/user/:user", (req, res) => {
-  const uid = req.params.user;
+app.delete("/api/auth/user/:username", (req, res) => {
+  const username = req.params.username.trim();
+  const usersRef = firestore.collection("Users");
+  const userDoc = usersRef.where("Username", "==", username).limit(1);
+  let uid = "";
 
-  // Validate if user exists
-  auth.getUser(uid).then((userRecord) => {
-    if (userRecord.uid && userRecord.uid === uid) {
-      const username = userRecord.displayName;
-
-      auth.deleteUser(uid).then(() => {
-        const responseMessage = {
-          uid,
-          username,
-          Status: "Deleted successfully",
-          deletedAt: admin.firestore.Timestamp.now().toDate(),
-        };
-        res.status(200).send(responseMessage);
-      });
+  userDoc.get().then((userDocument) => {
+    if (userDocument.docs.length > 0) {
+      uid = userDocument.docs[0].data().uid;
+    } else {
+      uid = "invalid";
     }
+    return uid;
+  }).then((foundUid) => {
+  // Validate if user exists
+    return auth.getUser(foundUid).then((userRecord) => {
+      if (userRecord.uid && userRecord.uid === foundUid) {
+        const username = userRecord.displayName;
+
+        auth.deleteUser(foundUid).then(() => {
+          const responseMessage = {
+            foundUid,
+            username,
+            Status: "Deleted successfully",
+            deletedAt: admin.firestore.Timestamp.now().toDate(),
+          };
+          return res.status(200).send(responseMessage);
+        });
+      }
+    });
   }).catch((error) => {
-    const errorMessage = `No user with uid: ${uid} was found`;
-    res.status(500).send({Error: errorMessage});
+    const errorMessage = `No user with Username: ${username} was found`;
+    console.dir({error}, {depth: null});
+    return res.status(500).send({Error: errorMessage});
   });
-  return;
 });
 
 /** Auth endpoint: Processes user account signup
@@ -351,10 +363,10 @@ app.delete("/api/auth/user/:user", (req, res) => {
 app.post("/api/auth/user/signup", (req, res) => {
   // Create User Auth object from request data
   const user = {
-    email: req.body.email,
+    email: req.body.email.trim(),
     emailVerified: false,
-    password: req.body.password,
-    displayName: req.body.displayName,
+    password: req.body.password.trim(),
+    displayName: req.body.displayName.trim(),
   };
 
   // Create user using Firebase Auth
@@ -406,33 +418,6 @@ app.post("/api/auth/user/signup", (req, res) => {
  */
 
 
-/** Firestore Usernames Collection Endpoints
- */
-
-
-/** DB endpoint: Queries the database for a list of usernames
- * @return: Array - An array containing the Usernames documents data
- */
-app.get("/api/db/usernames", (req, res) => {
-  const usernamesDocuments = [];
-  firestore.collection("Usernames").get()
-      .then((docs) => {
-        docs.forEach((doc) => {
-          usernamesDocuments.push(doc.data());
-        });
-        res.status(200).send(usernamesDocuments);
-      }).catch((error) => {
-        res.status(400).send({Error: error.code});
-      });
-});
-
-/** DB endpoint: Queries the database for a specific username
- * @param req.params: { username }
- * @return Map - An object containing the Username document data
- */
-app.get("/api/db/username/:username", (req, res) => {});
-
-
 /** Firestore Users Collection Endpoints
  */
 
@@ -454,11 +439,11 @@ app.get("/api/db/users", (req, res) => {
 });
 
 /** DB endpoint: Queries the database for a specific user
- * @param req.params: { user }
+ * @param req.params: { username }
  * @return Map - An object containing the User document data
  */
-app.get("/api/db/user/:user", (req, res) => {
-  const userId = req.params.user;
+app.get("/api/db/user/:username", (req, res) => {
+  const userId = req.params.user.trim();
   firestore.doc(`Users/${userId}`).get().then((userDoc) => {
     res.status(200).send(userDoc.data());
   }).catch((error) => {
@@ -467,10 +452,10 @@ app.get("/api/db/user/:user", (req, res) => {
 });
 
 /** DB endpoint: Updates the document for a specific user
- * @param req.params: { user }
+ * @param req.params: { username }
  * @return Map - An object containing the User document data
  */
-app.put("/api/db/user/:user", (req, res) => {});
+app.put("/api/db/user/:username", (req, res) => {});
 
 
 /** Firestore Planets Subcollection Endpoints
@@ -482,18 +467,31 @@ app.put("/api/db/user/:user", (req, res) => {});
  * @param req.params: { username }
  * @return Array - An array containing the Planets documents data
  */
-app.get("/api/db/:username/planets", (req, res) => {
+app.get("/api/db/user/:username/planets", (req, res) => {
+  const username = req.params.username.trim();
+  const usersRef = firestore.collection("Users");
+  const userDoc = usersRef.where("Username", "==", username).limit(1);
   const planetsDocuments = [];
-  firestore.collection("Planets").get()
-      .then((docs) => {
-        docs.forEach((doc) => {
-          planetsDocuments.push(doc.data());
+  let uid = "";
+
+  return userDoc.get().then((userDocument) => {
+    if (userDocument.docs.length > 0) {
+      uid = userDocument.docs[0].data().uid;
+    } else {
+      uid = "invalid";
+    }
+    return uid;
+  }).then((foundUid) => {
+    return firestore.collection(`Users/${foundUid}/Planets`).get()
+        .then((docs) => {
+          docs.forEach((doc) => {
+            planetsDocuments.push(doc.data());
+          });
+          return res.status(200).send(planetsDocuments);
         });
-        res.status(200).send(planetsDocuments);
-      })
-      .catch((error) => {
-        res.status(400).send({Error: error.code});
-      });
+  }).catch((error) => {
+    return res.status(400).send({Error: error.code});
+  });
 });
 
 /** DB endpoint: Queries the database for a specific planet
@@ -501,119 +499,153 @@ app.get("/api/db/:username/planets", (req, res) => {
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.get("/api/db/:username/:planet", (req, res) => {});
+app.get("/api/db/user/:username/:planet", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific planet
  * under a specific user
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.put("/api/db/:username/:planet", (req, res) => {});
+app.put("/api/db/user/:username/:planet", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific planet
  * under a specific user
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.delete("/api/db/:username/:planet", (req, res) => {});
+app.delete("/api/db/user/:username/:planet", (req, res) => {});
 
 /** DB endpoint: Creates a new planet document under a specific user
- * @param req:
+ * @param req.params { username }
+ * @param req.body:
  *  {
- *    planetName,           (String)
- *    planetImage,          (String) [OPTIONAL]
- *    planetTags,           (Array)  [OPTIONAL]
+ *    planetName,                 (String)
+ *    planetDescription,          (String) [OPTIONAL]
+ *    planetImage,                (String) [OPTIONAL]
+ *    planetTags,                 (Array)  [OPTIONAL]
  *  }
  * @return res:
  * {
- *    uid,                  (String)
- *    username,             (String)
+ *    Status,                     (String)
+ *    uid,                        (String)
+ *    username,                   (String)
+ *    User_UpdatedAt,             (String)
+ *    doc_id,                     (String)
  *    Planet_doc
  *    {
- *        doc_id,           (String)
- *        Creation_time,    (String)
- *        uid,              (String)
- *        Username          (String)
- *        Planet_name,      (String)
- *        Planet_image,     (String)
- *        Planet_settings,  (Map)
- *        Tags,             (Array)
- *        Zone_count,       (Integer)
- *        Zones,            (Array)
+ *        Creation_time,          (String)
+ *        uid,                    (String)
+ *        Username                (String)
+ *        Planet_name,            (String)
+ *        Planet_description,     (String)
+ *        Planet_image,           (String)
+ *        Planet_settings,        (Map)
+ *        Tags,                   (Array)
+ *        Zone_count,             (Integer)
+ *        Zones,                  (Map)
  *    },
  * }
  */
-app.post("/api/db/:username/createPlanet", (req, res) => {
-  const uid = req.body.uid;
-  const userRef = firestore.doc(`Users/${uid}`);
-  const zoneName = req.body.zoneName;
-  const zoneDescription = req.body.zoneDescription;
-  const planetName = req.body.planetName;
+app.post("/api/db/user/:username/createPlanet", (req, res) => {
+  console.dir({Request: req.body}, {depth: null});
+
+  const username = req.params.username.trim();
+  const planetName = req.body.planetName.trim();
+  const planetDescription = req.body.planetDescription.trim();
+  const planetImage = req.body.planetImage.trim();
   const planetTags = req.body.planetTags;
-  let userPlanetCount = -1;
-  let planets = {};
-  userRef.get().then((data) => {
-    userPlanetCount = data.data().Planet_count;
-    planets = data.data().Planets;
-  }).catch((error) => {
-    res.send({Error: "User does not exist!"});
-  });
 
-  // Create Planet object for Planet Document
-  const planet = {
-    User_uid: uid,
-    User_ref: userRef.path,
-    Planet_name: planetName,
-    Planet_image: "",
-    Planet_tags: planetTags,
-    Zone_count: 1,
-    Zones_info: [
-      {
-        Zone_name: zoneName,
-        Zone_description: zoneDescription,
-      },
-    ],
-  };
-  // Create Zone object for Zone Document
-  const zone = {
-    User_uid: planet.User_uid,
-    Zone_name: req.body.zoneName,
-    Zone_description: req.body.zoneDescription,
-    ZoneContent_count: 0,
-  };
+  const usersRef = firestore.collection("Users");
+  const userDoc = usersRef.where("Username", "==", username).limit(1);
+  let uid = "";
 
+  // Validate User is in the Users collection
+  return userDoc.get().then((userDocument) => {
+    if (userDocument.docs.length > 0) {
+      uid = userDocument.docs[0].data().uid;
+    } else {
+      uid = "invalid";
+    }
 
-  // Get User's Planet document
-  const planetRef = firestore.collection("Planets").doc();
-  const planetRefID = planetRef.id;
-  planetRef.set(planet).then(() => {
-    const zoneRef = planetRef.collection("Zones").doc();
-    zoneRef.set(zone).then(() => {
-      const planetCount = userPlanetCount + 1;
+    return uid;
+  }).then((foundUid) => {
+    if (foundUid === "invalid") {
+      return foundUid;
+    } else {
+    // Validate and create planet
+      const userRef = firestore.doc(`Users/${uid}`);
 
-      const userPlanet = {
-        Planet_id: planetRefID,
-        Planet_ref: planetRef.path,
-        Planet_name: planet.Planet_name,
-        Planet_image: planet.Planet_image,
-        Zone_count: planet.Zone_count,
-      };
-      planets[userPlanet.Planet_id] = userPlanet;
+      let userPlanetCount = -1;
+      let planets = {};
 
-      const updatedUserData = {
-        Planets: planets,
-        Planet_count: planetCount,
-      };
+      // Get user document data
+      return userRef.get().then((userDoc) => {
+        userPlanetCount = userDoc.data().Planet_count;
+        planets = userDoc.data().Planets;
 
-      userRef.update(updatedUserData)
-          .then(() => {
-            res.status(200).send({Planet: planet, Zone: zone, Status: "Created"});
-          });
-    });
-  })
-      .catch((error) => {
-        res.status(500).send({error: error.code});
+        let validPlanetName = planetName;
+
+        // Get User's Planet subcollection
+        const planetsRef = userRef.collection("Planets");
+
+        // Validate unique planet name
+        if (planets[validPlanetName]) {
+          const newName = String(Math.floor(Math.random() * 999));
+          validPlanetName = validPlanetName + "_" + newName;
+        }
+
+        // Create Planet object for Planet Document
+        const newPlanet = {
+          Creation_time: admin.firestore.Timestamp.now().toDate(),
+          uid: uid,
+          Username: username,
+          Planet_name: validPlanetName,
+          Planet_description: planetDescription,
+          Planet_image: "",
+          Planet_settings: {},
+          Tags: planetTags,
+          Zone_count: 0,
+          Zones: {},
+        };
+
+        // Set planet
+        return planetsRef.doc(validPlanetName).set(newPlanet)
+            .then((writeTime) => {
+              const planetCount = userPlanetCount + 1;
+
+              const userPlanet = {
+                Planet_name: newPlanet.Planet_name,
+                Planet_description: newPlanet.Planet_description,
+                Planet_image: newPlanet.Planet_image,
+                Zone_count: newPlanet.Zone_count,
+              };
+              planets[userPlanet.Planet_name] = userPlanet;
+
+              const updatedUserData = {
+                Planets: planets,
+                Planet_count: planetCount,
+              };
+
+              return userRef.update(updatedUserData)
+                  .then((updateWriteResult) => {
+                    const Response = {
+                      Status: "Created",
+                      uid,
+                      Username: username,
+                      User_updatedAt: updateWriteResult.writeTime.toDate(),
+                      doc_id: planetName,
+                      Planet_doc: newPlanet,
+                    };
+                    console.dir({Response}, {depth: null});
+                    return res.status(200).send({Response});
+                  });
+            });
       });
+    }
+  }).catch((error) => {
+    console.dir({Error: error.code}, {depth: null});
+    return res.status(500).send({error: error.code});
+  });
 });
 
 
@@ -626,28 +658,28 @@ app.post("/api/db/:username/createPlanet", (req, res) => {
  * @param req: { username, planet }
  * @return Array - An array containing the Zones documents data
  */
-app.get("/api/db/:username/:planet/zones", (req, res) => {});
+app.get("/api/db/user/:username/:planet/zones", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.get("/api/db/:username/:planet/:zone", (req, res) => {});
+app.get("/api/db/user/:username/:planet/:zone", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.put("/api/db/:username/:planet/:zone", (req, res) => {});
+app.put("/api/db/user/:username/:planet/:zone", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.delete("/api/db/:username/:planet/:zone", (req, res) => {});
+app.delete("/api/db/user/:username/:planet/:zone", (req, res) => {});
 
 /** DB endpoint: Creates a new zone document under a specific planet
  * under a specific user
@@ -678,7 +710,7 @@ app.delete("/api/db/:username/:planet/:zone", (req, res) => {});
  *    },
  * }
  */
-app.post("/api/db/:username/:planet/createZone", (req, res) => {});
+app.post("/api/db/user/:username/:planet/createZone", (req, res) => {});
 
 
 /** Firestore ZoneContent Subcollection Endpoints
@@ -690,28 +722,28 @@ app.post("/api/db/:username/:planet/createZone", (req, res) => {});
  * @param req.params: { username, planet, zone }
  * @return Array - An array containing the ZoneContent documents data
  */
-app.get("/api/db/:username/:planet/:zone/zonecontents", (req, res) => {});
+app.get("/api/db/user/:username/:planet/:zone/zonecontents", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.get("/api/db/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.get("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.put("/api/db/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.put("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.delete("/api/db/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.delete("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Creates a new zonecontent document under a specific zone
   * under a specific planet under a specific user
@@ -742,16 +774,16 @@ app.delete("/api/db/:username/:planet/:zone/:zonecontent", (req, res) => {});
   *    },
   * }
   */
-app.post("/api/db/:username/:planet/:zone/createContent", (req, res) => {});
+app.post("/api/db/user/:username/:planet/:zone/createContent", (req, res) => {});
 
 
 /** Firestore Group Query Endpoints
  */
 
 
-/** DB endpoint: Queries the Usernames collection,
- * the Planets and Zones subcollections for a given query
- * Query will also match the Tags document field
+/** DB endpoint: Queries the Users collection,
+ * the Planets, Zones, ZoneContent subcollections for a given query
+ * Query will match the Tags document field
  * @param req.params: { query }
  * @return Array - An array containing the matching queried data
  */
@@ -765,11 +797,9 @@ app.get("/api/db/query/:query", () => {});
 
 exports.app = functions.https.onRequest(app);
 
-// Creates User Document in Users Collection
-// and Username Document in Usernames Collection on creation of new user
+// Creates User Document in Users Collection on creation of new user
 exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
   const usersRef = firestore.collection("Users");
-  const usernamesRef = firestore.collection("Usernames");
 
   // Create User document using User Auth data
   const uid = userRecord.uid;
@@ -783,86 +813,76 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
     displayName = uid;
     // Update auth displayName
     auth.updateUser(uid, {displayName: displayName}).then((updatedRecord) => {
-      console.log({updatedRecord});
+      console.dir({updatedRecord}, {depth: null});
     });
   }
 
   // Check for unique username
-  usernamesRef.doc(displayName).get()
-      .then((usernameDoc) => {
-        if (usernameDoc.exists) {
-          // Set username to uid
-          displayName = uid;
-        }
-      }).then(() => {
-        // Create Users document
-        usersRef.doc(uid).set({
-          uid: uid,
-          Username: displayName,
-          Friend_count: 0,
-          Friends: [],
-          Planet_count: 0,
-          Profile_data: {
-            Bio: defaultBio,
-          },
-          Profile_settings: {},
-        })
-            .then((writeResult) => {
-              // Return user data and auth token
-              const userData = {
-                uid,
-                email: userRecord.email,
-                displayName: displayName,
-                createdAt: writeResult.writeTime.toDate(),
-              };
-              // Create Usernames document
-              usernamesRef.doc(displayName).set({
-                uid: uid,
-                Username: displayName,
-              }).then((writeResult) => {
-                const usernameData = {
-                  uid,
-                  Username: displayName,
-                  createdAt: writeResult.writeTime.toDate(),
-                };
+  const usernamesRef = usersRef.where("Username", "==", displayName);
 
-                console.log({usernameData, userData});
-                return ({usernameData, userData});
-              });
-            });
-      })
-      .catch((error) => {
-        console.error({Error: error.code});
-      });
+  return usernamesRef.get().then((usernameDoc) => {
+    if (usernameDoc.exists) {
+      // Set username to uid
+      displayName = uid;
+    }
+  }).then(() => {
+    // Create Users document
+    const userData = {
+      uid: uid,
+      Username: displayName,
+      Friend_count: 0,
+      Friends: [],
+      Planet_count: 0,
+      Planets: {},
+      Profile_data: {
+        Bio: defaultBio,
+      },
+      Profile_settings: {},
+    };
+    return usersRef.doc(uid).set(userData).then((writeResult) => {
+      // Return user data
+      const logUserData = {
+        createdAt: writeResult.writeTime.toDate(),
+        email: userRecord.email,
+        userData,
+      };
+      console.dir({logUserData}, {depth: null});
+      return ({logUserData});
+    });
+  }).catch((error) => {
+    const errorMessage = {
+      Status: "Failed user creation",
+      Error: {
+        Code: error.code,
+        Message: error.message,
+      },
+    };
+    console.dir({errorMessage}, {depth: null});
+    return ({errorMessage});
+  });
 });
 
 // Deletes User Document and Subcollections in Users Collection
-// and Username Document in Usernames Collection on deletion of existing user
+// on deletion of existing user
 exports.deleteUserDoc = functions.auth.user().onDelete((userRecord) => {
   const uid = userRecord.uid;
   const username = userRecord.displayName;
   const usersRef = firestore.collection("Users").doc(uid);
-  const usernamesRef = firestore.collection("Usernames").doc(username);
 
-  // Delete user and username documents
-  firestore.recursiveDelete(usersRef).then(() => {
-    firestore.recursiveDelete(usernamesRef).then(() => {
-      usersRef.delete().then(() => {
-        usernamesRef.delete().then(() => {
-          const logMessage = {
-            Status: "Successful user deletion",
-            UsersRecord: "Deleted successfully",
-            UsernamesRecord: "Deleted successfully",
-            DeletedUser: {
-              uid: uid,
-              username: username,
-            },
-            DeletedAt: admin.firestore.Timestamp.now().toDate(),
-          };
-          console.log(logMessage);
-          return;
-        });
-      });
+  // Delete user document and subcollections
+  return firestore.recursiveDelete(usersRef).then(() => {
+    return usersRef.delete().then((usersDeleteResult) => {
+      const logUserDelete = {
+        Status: "Successful user deletion",
+        UsersRecord: usersDeleteResult.writeTime.toDate(),
+        DeletedUser: {
+          uid: uid,
+          username: username,
+        },
+        DeletedAt: admin.firestore.Timestamp.now().toDate(),
+      };
+      console.dir({logUserDelete}, {depth: null});
+      return ({logUserDelete});
     });
   }).catch((error) => {
     const errorMessage = {
@@ -872,7 +892,7 @@ exports.deleteUserDoc = functions.auth.user().onDelete((userRecord) => {
         Message: error.message,
       },
     };
-    console.log(errorMessage);
-    return;
+    console.dir({errorMessage}, {depth: null});
+    return ({errorMessage});
   });
 });
