@@ -479,7 +479,12 @@ app.get("/api/db/user/:username", (req, res) => {
 
 /** DB endpoint: Updates the document for a specific user
  * @param req.params: { username }
- * @return Map - An object containing the User document data
+ * @param req.body:
+ * {
+ *      profileData,         (Map)
+ *      profileSettings,     (Map)
+ * }
+ * @return Map - An object containing the updated User document data
  */
 app.put("/api/db/user/:username", (req, res) => {});
 
@@ -555,21 +560,27 @@ app.get("/api/db/user/:username/:planet", (req, res) => {
     const collectionPath = `Users/${foundUid}/Planets`;
     return firestore.collection(collectionPath).doc(planetName).get()
         .then((doc) => {
-          const data = {
-            Creation_time: doc.data().Creation_time.toDate(),
-            uid: doc.data().uid,
-            Username: doc.data().Username,
-            Planet_name: doc.data().Planet_name,
-            Planet_description: doc.data().Planet_description,
-            Planet_image: doc.data().Planet_image,
-            Planet_settings: doc.data().Planet_settings,
-            Tags: doc.data().Tags,
-            Zone_count: doc.data().Zone_count,
-            Zones: doc.data().Zones,
-          };
-          return res.status(200).send(data);
+          if (doc.exists) {
+            const data = {
+              Creation_time: doc.data().Creation_time.toDate(),
+              uid: doc.data().uid,
+              Username: doc.data().Username,
+              Planet_name: doc.data().Planet_name,
+              Planet_description: doc.data().Planet_description,
+              Planet_image: doc.data().Planet_image,
+              Planet_settings: doc.data().Planet_settings,
+              Tags: doc.data().Tags,
+              Zone_count: doc.data().Zone_count,
+              Zones: doc.data().Zones,
+            };
+            console.dir({data}, {depth: null});
+            return res.status(200).send(data);
+          } else {
+            return res.status(500).send({Error: `Planet ${planetName} not found.`});
+          }
         });
   }).catch((error)=>{
+    console.dir({Error: error.code}, {depth: null});
     return res.status(400).send({Error: error.code});
   });
 });
@@ -577,9 +588,133 @@ app.get("/api/db/user/:username/:planet", (req, res) => {
 /** DB endpoint: Updates the document for a specific planet
  * under a specific user
  * @param req.params: { username, planet }
+ * @param req.body:
+ * {
+ *      planetDescription,
+ *      planetImage,
+ *      planetSettings,
+ *      tags,
+ * }
  * @return Map - An object containing the Planet document data
  */
-app.put("/api/db/user/:username/:planet", (req, res) => {});
+app.put("/api/db/user/:username/:planet", (req, res) => {
+  const username = req.params.username.trim();
+  const planetName = req.params.planet.trim();
+  const usersRef = firestore.collection("Users");
+  const userDoc = usersRef.where("Username", "==", username).limit(1);
+  let uid = "";
+
+  const updatedData = {
+    Planet_description: req.body.planetDescription ? req.body.planetDescription.trim() : undefined,
+    Planet_image: req.body.planetImage ? req.body.planetImage.trim() : undefined,
+    Planet_settings: req.body.planetSettings ? req.body.planetSettings : undefined,
+    Tags: req.body.tags ? req.body.tags : undefined,
+  };
+
+  // Check if data is undefined
+  let isDataEmpty = true;
+
+  for (const key in updatedData) {
+    if (updatedData[key] !== undefined || updatedData[key] !== "") {
+      isDataEmpty = false;
+    } else {
+      delete updatedData[key];
+    }
+  }
+
+  if (!isDataEmpty) {
+    return userDoc.get().then((userDocument) => {
+      if (userDocument.docs.length > 0) {
+        uid = userDocument.docs[0].data().uid;
+      } else {
+        uid = "invalid";
+      }
+      return uid;
+    }).then((foundUid) => {
+      const collectionPath = `Users/${foundUid}/Planets`;
+      // Update Planets document
+      return firestore.collection(collectionPath).doc(planetName).get()
+          .then((planetDoc) => {
+            if (planetDoc.exists) {
+              const data = {
+                Planet_description: planetDoc.data().Planet_description,
+                Planet_image: planetDoc.data().Planet_image,
+                Planet_settings: planetDoc.data().Planet_settings,
+                Tags: planetDoc.data().Tags,
+              };
+
+              const updatedFields = {};
+
+              // Filter out unchanged values
+              for (const key in data) {
+                if (updatedData[key] && data[key] !== updatedData[key]) {
+                  updatedFields[key] = updatedData[key];
+                }
+              }
+
+              return planetDoc.ref.update(updatedFields).then((writeResult) => {
+                const logPlanetUpdate = {
+                  UpdatedAt: writeResult.writeTime.toDate(),
+                  Username: username,
+                  Request: updatedData,
+                  UpdatedFields: updatedFields,
+                  Data: data,
+                };
+                return logPlanetUpdate;
+              }).then((logPlanetUpdate) => {
+                // Update User document if relevant fields changed value
+                const userPlanetData = logPlanetUpdate.UpdatedFields;
+
+                // Filter out unchanged values
+                const updatedUserFields = {
+                  Planet_description: userPlanetData.Planet_description,
+                  Planet_image: userPlanetData.Planet_image,
+                };
+
+                // Strip out undefined fields
+                for (const key in updatedUserFields) {
+                  if (updatedFields[key] === undefined) {
+                    delete updatedUserFields[key];
+                  }
+                }
+
+                const userDocUpdate = {};
+                userDocUpdate.Planets = {};
+                userDocUpdate.Planets[`${planetName}`] = updatedUserFields;
+
+                if (updatedUserFields) {
+                  const userDocPath = `Users/${foundUid}`;
+                  return firestore.doc(userDocPath).update(userDocUpdate).then((userWriteResult) => {
+                    const logUserUpdate = {
+                      UpdatedAt: userWriteResult.writeTime.toDate(),
+                      Username: username,
+                      uid: foundUid,
+                      UpdatedFields: updatedUserFields,
+                    };
+                    const logUpdates = {
+                      logPlanetUpdate,
+                      logUserUpdate,
+                    };
+                    console.dir({logUpdates}, {depth: null});
+                    return res.status(200).send(logUpdates);
+                  });
+                } else {
+                  console.dir({logPlanetUpdate}, {depth: null});
+                  return res.status(200).send(logPlanetUpdate);
+                }
+              });
+            } else {
+              return res.status(500).send({Error: `Planet ${planetName} not found.`});
+            }
+          });
+    }).catch((error)=>{
+      console.dir({Error: error.code}, {depth: null});
+      return res.status(500).send({Error: error.code});
+    });
+  } else {
+    return res.status(500).send({Error: "Invalid data sent in request"});
+  }
+});
 
 /** DB endpoint: Deletes the document for a specific planet
  * under a specific user
