@@ -50,7 +50,7 @@
     "rewrites": [
       {
         "source": "**",
-	"function": "app",
+        "function": "app",
         "destination": "/index.html"
       }
     ]
