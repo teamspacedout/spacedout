@@ -16,6 +16,8 @@ export const Background = () => {
     }, []);
 
     return (
+        <>
+        <div className="hero">
         <Particles
             id="tsparticles"
             init={particlesInit}
@@ -25,76 +27,66 @@ export const Background = () => {
                 top: 0,
                 left: 0,
                 width: "100%",
-                height: "100%"}}
+                height: "100%",
+                opacity:.5,
+                "z-index": -1,}}
             options={{
                 fullScreen: {
                     enable: true,
                     zIndex: -1
                 },
                 background: {
+                    
                     color: {
-                        value: "#0e0244",
+                        value: "#162747",
                     },
                 },
                 fpsLimit: 120,
+                interactivity: {
+                    detectsOn: 'canvas',
+                    events: {
+                        resize: true
+                    }
+                },
                 particles: {
                     color: {
-                        value: ["#007efd", "#ffffff"],
+                        value: [ "#ffffff"],
                     },
-                    collisions: {
-                        enable: true,
-                    },
-                    move: {
-                        directions: "none",
-                        enable: true,
-                        outModes: {
-                            default: "out",
-                        },
-                        random: false,
-                        speed: 0.15,
-                        straight: false,
-                        attract: {
-                            enable: false,
-                            rotateX: 600,
-                            rotateY: 1200
-                        },
-                    },
+                    
                     number: {
                         density: {
                             enable: true,
-                            area: 800,
+                            area: 1080,
                         },
-                        value: 80,
+                        limit: 0,
+                        value: 500,
                     },
                     opacity: {
-                        value: 0.75,
+                        
                         anim: {
                             enable: true,
-                            speed: 0.2,
-                            opacity_min: 0,
+                            speed: 1,
                             sync: false,
                         }
                     },
                     shape: {
-                        type: "circle",
+                        type: "circle"
                     },
                     size: {
-                        value: { min: 1, max: 5 },
                         random: true,
                         anim: {
                             enable: true,
-                            speed: 2.5,
-                            size_min: 0,
+                            
+                            size_min: 0.5,
                             sync: false
                         },
-                        stroke: {
-                            width: 0,
-                            color: "#000000",
-                        },
+                        value: 1
                     },
                 },
                 detectRetina: true,
             }}
         />
+        </div>
+        </>
     );
 };

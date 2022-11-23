@@ -47,7 +47,7 @@ function SignUp() {
         <div className="flex flex-col items-center justify-center h-screen">
             <div className=" bg-opacity-20  bg-purple-400 artboard artboard-horizontal phone-2 rounded-3xl">
 
-                <h1 className="hero text-white font-bold text-xl py-3"> Sign up for Spaced Out </h1>
+                <h1 className=" text-white font-bold text-xl py-3"> Sign up for Spaced Out </h1>
 
                 <form className="flex flex-col items-center" onSubmit={submitUser}>
                     <div className="mt-5">
@@ -75,13 +75,4 @@ function SignUp() {
 
 
 }
-
-
-
-
-
-
-
-
-
-    export default SignUp;
+export default SignUp;

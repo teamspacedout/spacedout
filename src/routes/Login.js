@@ -1,30 +1,49 @@
-import React, {useEffect, useState} from 'react';
-import { fireAuth, fireDB, fireStorage, fireLytics } from "../firebase";
-import {collection, getDocs} from 'firebase/firestore'
-
+import React from 'react';
+import './Login.css';
 
 function Login() {
-
-    const [users, setUsers] = useState([]);
-    const usersCollection = collection(fireDB, "Users");
-
-    useEffect(() => {
-        const getUsers = async () => {
-            const data = await getDocs(usersCollection)
-            setUsers(data.docs.map((doc) => ({...doc.data(), id: doc.id})))
-        }
-
-        getUsers();
-    })
-
     return (
-        <div>{users.map((user) => {
-            return <div>
-                <h1>Name: {user.id}</h1>
-                <h1>Zone_Count: </h1>
-            </div>
-        } )}</div>
+      <div className="Auth-form-container">
+      <form className="Auth-form">
+        <div className="Auth-form-content">
+          <h3 className="Auth-form-title">Sign In</h3>
+          <div className="form-group mt-3">
+            <label>Email address:</label>
+            <input
+              type="email"
+              className="form-control mt-1 border-2 rounded-md border-purple-500"
+              placeholder="Enter email"
+            />
+          </div>
+          <div className="form-group mt-3">
+            <label>Username:</label>
+            <input
+              type="username"
+              className="form-control mt-1 border-2 rounded-md border-purple-500"
+              placeholder="Enter username"
+            />
+          </div>
+          <div className="form-group mt-3">
+            <label>Password:</label>
+            <input
+              type="password"
+              className="form-control mt-1 border-2 rounded-md border-purple-500"
+              placeholder="Enter password"
+            />
+          </div>
+          <div className="d-grid gap-2 mt-3">
+            <button type="submit" className="btn btn-primary">
+              Submit
+            </button>
+          </div>
+          <p className="forgot-password text-right mt-2 border-2">
+            Forgot <a href="#">password?</a>
+          </p>
+        </div>
+      </form>
+    </div>
     );
 }
 
 export default Login;
+
