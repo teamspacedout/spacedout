@@ -6,7 +6,7 @@ function UserPage(props) {
     return (
         <main>
             <NavBar/>
-            <div className="display grid grid-cols-1 sm:grid-cols-3 gap-10 h-screen w-screen">
+            <div className="display grid grid-cols-1 md:grid-cols-3 gap-10 h-screen w-screen">
                 <Planet animated = {true} remainPlanets = {[<PlanetButton futureStyle = {{backgroundColor:'blue'}}/>, <PlanetButton/>]}/>
                 <Planet animated = {true} remainPlanets = {[<PlanetButton futureStyle = {{backgroundColor:'blue'}}/>, <PlanetButton/>]}/>
                 <Planet animated = {true} remainPlanets = {[<PlanetButton futureStyle = {{backgroundColor:'blue'}}/>, <PlanetButton/>]}/>

@@ -8,7 +8,8 @@ function Planet({defaultPlanet, animated, open, style, planetSize, orbitSize, di
 
 
     /*
-         Properties for Angle on React Planet sub types.
+         Properties for Angle on React Planet Sub System,
+         Utilizing Grid Layout
      */
 
     const sections = ["col-start-1 col-end-2", "col-start-2 col-end-3", "col-start-3 col-end-4"];
