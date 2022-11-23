@@ -5,8 +5,8 @@
  * terminated by the system
  */
 
-const dotenv = require("dotenv");
-dotenv.config();
+//const dotenv = require("dotenv");
+//dotenv.config();
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 // const {Logging} = require("@google-cloud/logging");
@@ -15,8 +15,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors")({origin: true});
 
-const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
-console.log(projectID);
+//const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
+//console.log(projectID);
 
 // Initialization
 // const logging = new Logging();
@@ -39,7 +39,6 @@ const messageData = {
 };
 
 // Write log to Cloud Logging
-<<<<<<< HEAD
 // const entry = log.entry(METADATA, messageData);
 // log.write(entry);
 
