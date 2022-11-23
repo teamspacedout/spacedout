@@ -306,7 +306,7 @@ app.post("/api/db/createPlanet", (req, res) => {
     res.send({Error: "User does not exist!"});
   });
 
-  // Create Planet object for Planet Document
+  // Create PlanetOrbit object for PlanetOrbit Document
   const planet = {
     User_uid: uid,
     User_ref: userRef.path,
@@ -330,7 +330,7 @@ app.post("/api/db/createPlanet", (req, res) => {
   };
 
 
-  // Get User's Planet document
+  // Get User's PlanetOrbit document
   const planetRef = firestore.collection("Planets").doc();
   const planetRefID = planetRef.id;
   planetRef.set(planet).then(() => {
@@ -364,7 +364,7 @@ app.post("/api/db/createPlanet", (req, res) => {
 });
 
 /** DB endpoint: Queries the database for a list of
- * zones in the Zones Subcollection of a specific Planet
+ * zones in the Zones Subcollection of a specific PlanetOrbit
  * @param req: { planet } - The Document ID of the planet
  * @return Array - An array containing the Zones documents data
  */
