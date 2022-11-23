@@ -1,5 +1,5 @@
 import React from 'react';
-import {motion} from "framer-motion";
+import {AnimatePresence, motion} from "framer-motion";
 import {FaHourglassStart} from "react-icons/fa";
 import {Link} from "react-router-dom";
 
@@ -29,10 +29,13 @@ import {Link} from "react-router-dom";
 function PlanetButton(props) {
     return (
         <div className={props.hasToolTip ? "tooltip tooltip-secondary" : ""} data-tip ={`${props.toolTip}`} >
-            <motion.button
+           <AnimatePresence>
+               {
+                   <motion.button
                 initial={{scale: 0}}
                 animate={{scale: 1}}
                 transition={{duration: 0.75}}
+                exit={{ scale: 0 }}
                 className= {props.btnProperties}
                 whileHover={{
                     scale: 1.2,
@@ -45,7 +48,8 @@ function PlanetButton(props) {
                 </Link>
 
             </motion.button>
-
+               }
+           </AnimatePresence>
         </div>
     );
 }
@@ -55,6 +59,7 @@ PlanetButton.defaultProps = {
     reactIcon: <FaHourglassStart className="text-purple-800 scale-150"/>,
     toolTip: "Home",
     Link: "/",
-    hasToolTip: true
+    hasToolTip: true,
+    isVisible: true
 }
 export default PlanetButton;

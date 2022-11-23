@@ -3,10 +3,10 @@ import {motion} from "framer-motion";
 
 
 
-function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, distanceFromPlanet, remainPlanets}) {
+function PlanetOrbit({defaultPlanet, animated, remainPlanets, showOrbit}) {
 
 
-    const [showButton, setButtonShown] = useState(false);
+    const [showButton, setButtonShown] = useState(showOrbit);
     const [planetButtons, setPlanetButtons] = useState(remainPlanets);
 
     const handleClick = (e) => {
@@ -68,7 +68,7 @@ function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, dis
                             <div className=" -translate-y-10  col-start-2 col-end-3 btn-circle">
                             {showButton && (
                                 <span  >
-                                    {planetButtons[0]}
+                                    {planetButtons[1]}
                                  </span>
                             )}
                             </div>
@@ -76,7 +76,7 @@ function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, dis
                             <div className=" col-start-3 col-end-4 btn-circle">
                             {showButton && (
                                 <span  >
-                                    {planetButtons[0]}
+                                    {planetButtons[2]}
                                 </span>
                             )}
                             </div>
@@ -84,19 +84,28 @@ function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, dis
                             <div className=" -translate-x-10 col-start-1 col-end-2 btn-circle">
                             {showButton && (
                                 <span  >
-                                     {planetButtons[0]}
+                                     {planetButtons[3]}
                                 </span>
                             )}
                             </div>
 
-                            <div onClick={handleClick}>
-                                <DefaultPlanet/>
+                            <div onClick={handleClick} className="cursor-pointer">
+                                {animated ? <motion.div
+                                    whileHover={{
+                                        scale: 1.1,
+                                        transition: { duration: 1 },
+                                    }}
+
+                                >
+                                    {defaultPlanet}
+                                </motion.div> : defaultPlanet}
+
                             </div>
 
                             <div className=" col-start-3 col-end-4 translate-x-10 btn-circle">
                             {showButton && (
-                                <span  >
-                                    {planetButtons[0]}
+                                <span className="cursor-pointer">
+                                    {planetButtons[4]}
                                 </span>
                             )}
                             </div>
@@ -104,7 +113,7 @@ function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, dis
                             <div className="btn-circle">
                             {showButton && (
                                 <span>
-                                     {planetButtons[1]}
+                                     {planetButtons[5]}
                                  </span>
                             )}
                             </div>
@@ -112,7 +121,7 @@ function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, dis
                             <div className=" translate-y-10  col-start-2 col-end-3 btn-circle">
                             {showButton && (
                                 <span  >
-                                    {planetButtons[0]}
+                                    {planetButtons[6]}
                                  </span>
                             )}
                             </div>
@@ -120,7 +129,7 @@ function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, dis
                             <div className=" col-start-3 col-end-4 btn-circle">
                             {showButton && (
                                 <span  >
-                                     {planetButtons[0]}
+                                     {planetButtons[7]}
                                  </span>
                             )}
                             </div>
@@ -138,9 +147,6 @@ function PlanetOrbit({defaultPlanet, animated, style, planetSize, orbitSize, dis
 PlanetOrbit.defaultProps = {
     defaultPlanet: <DefaultPlanet/>,
     animated : true,
-    planetSize: 40,
-    orbitSize: 10,
-    distanceFromPlanet: 30,
     remainPlanets: true
 };
 
