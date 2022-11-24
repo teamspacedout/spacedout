@@ -9,6 +9,7 @@ import React from 'react';
 
     img: Simply put the link to the image and it will encompass a circle around the planet.
  */
+
 function Planet({scale, img}) {
     return (
      <div className={`image-full scale-${scale} btn-circle shadow-md shadow-purple-200`}>
