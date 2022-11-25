@@ -11,7 +11,6 @@ function PlanetOrbit({defaultPlanet, animated, remainPlanets, showOrbit}) {
 
     const handleClick = (e) => {
         setButtonShown(current => !current);
-        console.log(showButton)
     }
 
     /*
@@ -42,7 +41,6 @@ function PlanetOrbit({defaultPlanet, animated, remainPlanets, showOrbit}) {
 
     }
 
-    console.log(remainPlanets)
 
     /*
          We are going to add int out grid the planets in the following order:

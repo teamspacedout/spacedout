@@ -4,7 +4,24 @@ import PlanetOrbit from "../components/PlanetOrbit";
 import PlanetButton from "../components/PlanetButton";
 import Planet from "../components/Planet";
 import {FaAirbnb, FaFacebook, FaGoogle, FaInstagram, FaMagic, FaTiktok, FaTumblr, FaYahoo} from "react-icons/fa";
+import axios from "axios";
+import {useNavigate} from "react-router-dom";
+
 function UserPage(props) {
+
+    const user = (window.location.pathname).slice(1);
+    const navigate = useNavigate();
+
+    const getData = async () => {
+        try {
+            const response = await axios.get(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/auth/user/${user}`);
+        } catch (error) {
+            return navigate('/404');
+        }
+    }
+
+    console.log(getData());
+
     return (
         <main>
             <NavBar/>
