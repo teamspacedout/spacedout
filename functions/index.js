@@ -547,7 +547,7 @@ app.get("/api/db/user/:username/planets", (req, res) => {
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.get("/api/db/user/:username/:planet", (req, res) => {
+app.get("/api/db/user/:username/planet/:planet", (req, res) => {
   const username = req.params.username.trim();
   const planetName = req.params.planet.trim();
   const usersRef = firestore.collection("Users");
@@ -602,7 +602,7 @@ app.get("/api/db/user/:username/:planet", (req, res) => {
  * }
  * @return Map - An object containing the Planet document data
  */
-app.put("/api/db/user/:username/:planet", (req, res) => {
+app.put("/api/db/user/:username/planet/:planet", (req, res) => {
   const username = req.params.username.trim();
   const planetName = req.params.planet.trim();
   const usersRef = firestore.collection("Users");
@@ -726,7 +726,7 @@ app.put("/api/db/user/:username/:planet", (req, res) => {
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.delete("/api/db/user/:username/:planet", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet", (req, res) => {});
 
 /** DB endpoint: Creates a new planet document under a specific user
  * @param req.params { username }
@@ -871,28 +871,28 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
  * @param req: { username, planet }
  * @return Array - An array containing the Zones documents data
  */
-app.get("/api/db/user/:username/:planet/zones", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zones", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.get("/api/db/user/:username/:planet/:zone", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.put("/api/db/user/:username/:planet/:zone", (req, res) => {});
+app.put("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.delete("/api/db/user/:username/:planet/:zone", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {});
 
 /** DB endpoint: Creates a new zone document under a specific planet
  * under a specific user
@@ -923,7 +923,7 @@ app.delete("/api/db/user/:username/:planet/:zone", (req, res) => {});
  *    },
  * }
  */
-app.post("/api/db/user/:username/:planet/createZone", (req, res) => {});
+app.post("/api/db/user/:username/planet/:planet/createZone", (req, res) => {});
 
 
 /** Firestore ZoneContent Subcollection Endpoints
@@ -935,28 +935,28 @@ app.post("/api/db/user/:username/:planet/createZone", (req, res) => {});
  * @param req.params: { username, planet, zone }
  * @return Array - An array containing the ZoneContent documents data
  */
-app.get("/api/db/user/:username/:planet/:zone/zonecontents", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zone/:zone/zonecontents", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.get("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zone/:zone/zonecontent/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.put("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.put("/api/db/user/:username/planet/:planet/zone/:zone/zonecontent/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.delete("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet/zone/:zone/zonecontent/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Creates a new zonecontent document under a specific zone
   * under a specific planet under a specific user
@@ -987,7 +987,7 @@ app.delete("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {}
   *    },
   * }
   */
-app.post("/api/db/user/:username/:planet/:zone/createContent", (req, res) => {});
+app.post("/api/db/user/:username/planet/:planet/zone/:zone/createContent", (req, res) => {});
 
 
 /** Firestore Group Query Endpoints
