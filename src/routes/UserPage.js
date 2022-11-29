@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import NavBar from "../components/NavBar";
 import PlanetOrbit from "../components/PlanetOrbit";
 import PlanetButton from "../components/PlanetButton";
@@ -6,9 +6,11 @@ import Planet from "../components/Planet";
 import {FaAirbnb, FaFacebook, FaGoogle, FaInstagram, FaMagic, FaTiktok, FaTumblr, FaYahoo} from "react-icons/fa";
 import axios from "axios";
 import {useNavigate} from "react-router-dom";
+import UserLogin from "../lib/context";
 
 function UserPage(props) {
 
+    //const [person, username] = useContext(UserLogin);
     const user = (window.location.pathname).slice(1);
     const navigate = useNavigate();
 
