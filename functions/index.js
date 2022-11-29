@@ -472,12 +472,14 @@ app.get("/api/db/users", (req, res) => {
  * @return Map - An object containing the User document data
  */
 app.get("/api/db/user/:username", (req, res) => {
-  const userId = req.params.username.trim();
-  firestore.doc(`Users/${userId}`).get().then((userDoc) => {
-    res.status(200).send(userDoc.data());
-  }).catch((error) => {
-    res.status(400).send({error: error.code});
-  });
+  const username = req.params.username.trim();
+
+  firestore.collection("Users").where("Username", "==", username).limit(1)
+      .get().then((userDoc) => {
+        res.status(200).send(userDoc.docs[0].data());
+      }).catch((error) => {
+        res.status(400).send({error: error.code});
+      });
 });
 
 /** DB endpoint: Updates the document for a specific user
