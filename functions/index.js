@@ -627,10 +627,13 @@ app.put("/api/db/user/:username/planet/:planet", (req, res) => {
     }
   }
 
+  let userPlanets = {};
+
   if (!isDataEmpty) {
     return userDoc.get().then((userDocument) => {
       if (userDocument.docs.length > 0) {
         uid = userDocument.docs[0].data().uid;
+        userPlanets = userDocument.docs[0].data().Planets;
       } else {
         uid = "invalid";
       }
@@ -684,7 +687,7 @@ app.put("/api/db/user/:username/planet/:planet", (req, res) => {
                 }
 
                 const userDocUpdate = {};
-                userDocUpdate.Planets = {};
+                userDocUpdate.Planets = userPlanets;
                 userDocUpdate.Planets[`${planetName}`] = updatedUserFields;
 
                 if (updatedUserFields) {
