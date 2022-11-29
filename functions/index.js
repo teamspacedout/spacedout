@@ -5,8 +5,8 @@
  * terminated by the system
  */
 
-//const dotenv = require("dotenv");
-//dotenv.config();
+// const dotenv = require("dotenv");
+// dotenv.config();
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 // const {Logging} = require("@google-cloud/logging");
@@ -15,8 +15,8 @@ const express = require("express");
 const app = express();
 const cors = require("cors")({origin: true});
 
-//const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
-//console.log(projectID);
+// const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
+// console.log(projectID);
 
 // Initialization
 // const logging = new Logging();
@@ -472,12 +472,14 @@ app.get("/api/db/users", (req, res) => {
  * @return Map - An object containing the User document data
  */
 app.get("/api/db/user/:username", (req, res) => {
-  const userId = req.params.username.trim();
-  firestore.doc(`Users/${userId}`).get().then((userDoc) => {
-    res.status(200).send(userDoc.data());
-  }).catch((error) => {
-    res.status(400).send({error: error.code});
-  });
+  const username = req.params.username.trim();
+
+  firestore.collection("Users").where("Username", "==", username).limit(1)
+      .get().then((userDoc) => {
+        res.status(200).send(userDoc.docs[0].data());
+      }).catch((error) => {
+        res.status(400).send({error: error.code});
+      });
 });
 
 /** DB endpoint: Updates the document for a specific user
@@ -489,7 +491,60 @@ app.get("/api/db/user/:username", (req, res) => {
  * }
  * @return Map - An object containing the updated User document data
  */
-app.put("/api/db/user/:username", (req, res) => {});
+app.put("/api/db/user/:username", (req, res) => {
+  const username = req.params.username.trim();
+  const usersRef = firestore.collection("Users");
+  const userDoc = usersRef.where("Username", "==", username).limit(1);
+
+  const updatedUser = {
+    Profile_data: req.body.profileData ? req.body.profileData : undefined,
+    Profile_settings: req.body.profileSettings ? req.body.profileSettings : undefined,
+  };
+
+  // Check if data is undefined
+  let isDataEmpty = true;
+
+  for (const key in updatedUser) {
+    if (updatedUser[key] !== undefined && Object.values(updatedUser[key]).length > 0) {
+      isDataEmpty = false;
+    } else {
+      delete updatedUser[key];
+    }
+  }
+
+  if (!isDataEmpty) {
+    return userDoc.get().then((userDocument) => {
+      if (userDocument.docs.length > 0) {
+        const docId = userDocument.docs[0].id;
+        const userProfileData = userDocument.docs[0].data().Profile_data;
+        const userProfileSettings = userDocument.docs[0].data().Profile_settings;
+        const uid = userDocument.docs[0].data().uid;
+
+        // Update User document
+        return usersRef.doc(docId).update(updatedUser).then((writeResult) => {
+          const originalData = {
+            Profile_data: userProfileData,
+            Profile_settings: userProfileSettings,
+          };
+          const logUserUpdate = {
+            UpdatedAt: writeResult.writeTime.toDate(),
+            Username: username,
+            uid: uid,
+            originalData,
+            updatedFields: updatedUser,
+          };
+          return res.status(200).send(logUserUpdate);
+        });
+      } else {
+        return res.status(500).send({Error: "User not found"});
+      }
+    }).catch((error) => {
+      return res.status(500).send({Error: error.code});
+    });
+  } else {
+    return res.status(400).send({Error: "No valid data was sent"});
+  }
+});
 
 
 /** Firestore Planets Subcollection Endpoints
@@ -545,7 +600,7 @@ app.get("/api/db/user/:username/planets", (req, res) => {
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.get("/api/db/user/:username/:planet", (req, res) => {
+app.get("/api/db/user/:username/planet/:planet", (req, res) => {
   const username = req.params.username.trim();
   const planetName = req.params.planet.trim();
   const usersRef = firestore.collection("Users");
@@ -561,20 +616,20 @@ app.get("/api/db/user/:username/:planet", (req, res) => {
     return uid;
   }).then((foundUid) => {
     const collectionPath = `Users/${foundUid}/Planets`;
-    return firestore.collection(collectionPath).doc(planetName).get()
-        .then((doc) => {
-          if (doc.exists) {
+    return firestore.collection(collectionPath).where("Planet_name", "==", planetName)
+        .limit(1).get().then((doc) => {
+          if (doc.docs[0].exists) {
             const data = {
-              Creation_time: doc.data().Creation_time.toDate(),
-              uid: doc.data().uid,
-              Username: doc.data().Username,
-              Planet_name: doc.data().Planet_name,
-              Planet_description: doc.data().Planet_description,
-              Planet_image: doc.data().Planet_image,
-              Planet_settings: doc.data().Planet_settings,
-              Tags: doc.data().Tags,
-              Zone_count: doc.data().Zone_count,
-              Zones: doc.data().Zones,
+              Creation_time: doc.docs[0].data().Creation_time.toDate(),
+              uid: doc.docs[0].data().uid,
+              Username: doc.docs[0].data().Username,
+              Planet_name: doc.docs[0].data().Planet_name,
+              Planet_description: doc.docs[0].data().Planet_description,
+              Planet_image: doc.docs[0].data().Planet_image,
+              Planet_settings: doc.docs[0].data().Planet_settings,
+              Tags: doc.docs[0].data().Tags,
+              Zone_count: doc.docs[0].data().Zone_count,
+              Zones: doc.docs[0].data().Zones,
             };
             console.dir({data}, {depth: null});
             return res.status(200).send(data);
@@ -600,7 +655,7 @@ app.get("/api/db/user/:username/:planet", (req, res) => {
  * }
  * @return Map - An object containing the Planet document data
  */
-app.put("/api/db/user/:username/:planet", (req, res) => {
+app.put("/api/db/user/:username/planet/:planet", (req, res) => {
   const username = req.params.username.trim();
   const planetName = req.params.planet.trim();
   const usersRef = firestore.collection("Users");
@@ -608,9 +663,10 @@ app.put("/api/db/user/:username/:planet", (req, res) => {
   let uid = "";
 
   const updatedData = {
+    Planet_name: req.body.planetName ? req.body.planetName.trim() : undefined,
     Planet_description: req.body.planetDescription ? req.body.planetDescription.trim() : undefined,
     Planet_image: req.body.planetImage ? req.body.planetImage.trim() : undefined,
-    Planet_settings: req.body.planetSettings ? req.body.planetSettings : undefined,
+    Planet_settings: Object.keys(req.body.planetSettings).length > 1 ? req.body.planetSettings : undefined,
     Tags: req.body.tags ? req.body.tags : undefined,
   };
 
@@ -625,10 +681,13 @@ app.put("/api/db/user/:username/:planet", (req, res) => {
     }
   }
 
+  let userPlanets = {};
+
   if (!isDataEmpty) {
     return userDoc.get().then((userDocument) => {
       if (userDocument.docs.length > 0) {
         uid = userDocument.docs[0].data().uid;
+        userPlanets = userDocument.docs[0].data().Planets;
       } else {
         uid = "invalid";
       }
@@ -636,76 +695,129 @@ app.put("/api/db/user/:username/:planet", (req, res) => {
     }).then((foundUid) => {
       const collectionPath = `Users/${foundUid}/Planets`;
       // Update Planets document
-      return firestore.collection(collectionPath).doc(planetName).get()
+      return firestore.collection(collectionPath)
+          .where("Planet_name", "==", planetName).limit(1).get()
           .then((planetDoc) => {
-            if (planetDoc.exists) {
-              const data = {
-                Planet_description: planetDoc.data().Planet_description,
-                Planet_image: planetDoc.data().Planet_image,
-                Planet_settings: planetDoc.data().Planet_settings,
-                Tags: planetDoc.data().Tags,
+            if (planetDoc.docs[0].exists) {
+              const currentData = {
+                Planet_name: planetDoc.docs[0].data().Planet_name,
+                Planet_description: planetDoc.docs[0].data().Planet_description,
+                Planet_image: planetDoc.docs[0].data().Planet_image,
+                Planet_settings: planetDoc.docs[0].data().Planet_settings,
+                Tags: planetDoc.docs[0].data().Tags,
               };
 
               const updatedFields = {};
 
               // Filter out unchanged values
-              for (const key in data) {
-                if (updatedData[key] && data[key] !== updatedData[key]) {
+              for (const key in currentData) {
+                if (updatedData[key] && currentData[key] !== updatedData[key]) {
                   updatedFields[key] = updatedData[key];
                 }
               }
 
-              return planetDoc.ref.update(updatedFields).then((writeResult) => {
-                const logPlanetUpdate = {
-                  UpdatedAt: writeResult.writeTime.toDate(),
-                  Username: username,
-                  Request: updatedData,
-                  UpdatedFields: updatedFields,
-                  Data: data,
-                };
-                return logPlanetUpdate;
-              }).then((logPlanetUpdate) => {
-                // Update User document if relevant fields changed value
-                const userPlanetData = logPlanetUpdate.UpdatedFields;
-
-                // Filter out unchanged values
-                const updatedUserFields = {
-                  Planet_description: userPlanetData.Planet_description,
-                  Planet_image: userPlanetData.Planet_image,
-                };
-
-                // Strip out undefined fields
-                for (const key in updatedUserFields) {
-                  if (updatedFields[key] === undefined) {
-                    delete updatedUserFields[key];
-                  }
-                }
-
-                const userDocUpdate = {};
-                userDocUpdate.Planets = {};
-                userDocUpdate.Planets[`${planetName}`] = updatedUserFields;
-
-                if (updatedUserFields) {
-                  const userDocPath = `Users/${foundUid}`;
-                  return firestore.doc(userDocPath).update(userDocUpdate).then((userWriteResult) => {
-                    const logUserUpdate = {
-                      UpdatedAt: userWriteResult.writeTime.toDate(),
+              // Update Planets document
+              return planetDoc.docs[0].ref.update(updatedFields)
+                  .then((writeResult) => {
+                    const logPlanetUpdate = {
+                      UpdatedAt: writeResult.writeTime.toDate(),
                       Username: username,
-                      uid: foundUid,
-                      UpdatedFields: updatedUserFields,
+                      Request: updatedData,
+                      UpdatedFields: updatedFields,
+                      CurrentData: currentData,
                     };
-                    const logUpdates = {
-                      logPlanetUpdate,
-                      logUserUpdate,
+                    return logPlanetUpdate;
+                  }).then((logPlanetUpdate) => {
+                    // Update User document if relevant fields changed value
+                    const userPlanetData = logPlanetUpdate.UpdatedFields;
+
+                    // Filter out unchanged values
+                    const updatedUserFields = {
+                      Planet_name: userPlanetData.Planet_name,
+                      Planet_description: userPlanetData.Planet_description,
+                      Planet_image: userPlanetData.Planet_image,
                     };
-                    console.dir({logUpdates}, {depth: null});
-                    return res.status(200).send(logUpdates);
+
+                    // Strip out undefined fields
+                    for (const key in updatedUserFields) {
+                      if (updatedFields[key] === undefined) {
+                        delete updatedUserFields[key];
+                      }
+                    }
+
+                    // Update Planets object
+                    const userDocUpdate = {};
+                    userDocUpdate.Planets = Object.assign(userPlanets);
+
+                    // Check if Planet name is being updated
+                    const updatedPName = updatedUserFields.Planet_name;
+                    const currentPName = currentData.Planet_name;
+                    if (updatedPName && updatedPName !== currentPName) {
+                      // Get old planet data
+                      const planetCopy = Object.assign(currentData);
+
+                      // Copy old data to new planet
+                      for (const key in updatedUserFields) {
+                        // Overwrite updated values
+                        if (planetCopy[key] !== updatedUserFields[key]) {
+                          planetCopy[key] = updatedUserFields[key];
+                        }
+                      }
+
+                      // Remove unnecessary fields
+                      for (const key in planetCopy) {
+                        if (key === "Tags" || key === "Planet_settings") {
+                          delete planetCopy[key];
+                        }
+                      }
+                      // Copy zone count
+                      const targetPlanet = userDocUpdate.Planets[planetName];
+                      const zoneCount = targetPlanet.Zone_count;
+                      planetCopy.Zone_count = zoneCount;
+
+                      // Assign updated planet to Planets map
+                      const updateTarget = userDocUpdate.Planets;
+                      updateTarget[planetCopy.Planet_name] = planetCopy;
+
+                      // Delete old planet from Planets map
+                      for (const key in userDocUpdate.Planets) {
+                        if (key === planetName) {
+                          delete userDocUpdate.Planets[key];
+                        }
+                      }
+                    } else {
+                      // Update fields
+                      for (const key in updatedUserFields) {
+                        if (updatedFields[key]) {
+                          const data = updatedUserFields[key];
+                          userDocUpdate.Planets[planetName][key] = data;
+                        }
+                      }
+                    }
+
+                    if (updatedUserFields) {
+                      const userDocPath = `Users/${foundUid}`;
+
+                      return firestore.doc(userDocPath).update(userDocUpdate)
+                          .then((userWriteResult) => {
+                            const logUserUpdate = {
+                              UpdatedAt: userWriteResult.writeTime.toDate(),
+                              Username: username,
+                              uid: foundUid,
+                              UpdatedFields: updatedUserFields,
+                            };
+                            const logUpdates = {
+                              logPlanetUpdate,
+                              logUserUpdate,
+                            };
+                            console.dir({logUpdates}, {depth: null});
+                            return res.status(200).send(logUpdates);
+                          });
+                    } else {
+                      console.dir({logPlanetUpdate}, {depth: null});
+                      return res.status(200).send(logPlanetUpdate);
+                    }
                   });
-                } else {
-                  console.dir({logPlanetUpdate}, {depth: null});
-                  return res.status(200).send(logPlanetUpdate);
-                }
-              });
             } else {
               return res.status(500).send({Error: `Planet ${planetName} not found.`});
             }
@@ -724,7 +836,7 @@ app.put("/api/db/user/:username/:planet", (req, res) => {
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.delete("/api/db/user/:username/:planet", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet", (req, res) => {});
 
 /** DB endpoint: Creates a new planet document under a specific user
  * @param req.params { username }
@@ -783,7 +895,7 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
     if (foundUid === "invalid") {
       return foundUid;
     } else {
-    // Validate and create planet
+      // Validate and create planet
       const userRef = firestore.doc(`Users/${uid}`);
 
       let userPlanetCount = -1;
@@ -800,9 +912,11 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
         const planetsRef = userRef.collection("Planets");
 
         // Validate unique planet name
-        if (planets[validPlanetName]) {
-          const newName = String(Math.floor(Math.random() * 99999));
-          validPlanetName = validPlanetName + "_" + newName;
+        for (const planet of Object.keys(planets)) {
+          if (planets[planet].Planet_name === validPlanetName) {
+            const newName = String(Math.floor(Math.random() * 99999));
+            validPlanetName = validPlanetName + "_" + newName;
+          }
         }
 
         // Create Planet object for Planet Document
@@ -820,7 +934,7 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
         };
 
         // Set planet
-        return planetsRef.doc(validPlanetName).set(newPlanet)
+        return planetsRef.doc().set(newPlanet)
             .then((writeTime) => {
               const planetCount = userPlanetCount + 1;
 
@@ -869,28 +983,28 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
  * @param req: { username, planet }
  * @return Array - An array containing the Zones documents data
  */
-app.get("/api/db/user/:username/:planet/zones", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zones", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.get("/api/db/user/:username/:planet/:zone", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.put("/api/db/user/:username/:planet/:zone", (req, res) => {});
+app.put("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific zone
  * under a specific planet under a specific user
  * @param req.params: { username, planet, zone }
  * @return Map - An object containing the Zone document data
  */
-app.delete("/api/db/user/:username/:planet/:zone", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {});
 
 /** DB endpoint: Creates a new zone document under a specific planet
  * under a specific user
@@ -921,7 +1035,7 @@ app.delete("/api/db/user/:username/:planet/:zone", (req, res) => {});
  *    },
  * }
  */
-app.post("/api/db/user/:username/:planet/createZone", (req, res) => {});
+app.post("/api/db/user/:username/planet/:planet/createZone", (req, res) => {});
 
 
 /** Firestore ZoneContent Subcollection Endpoints
@@ -933,28 +1047,28 @@ app.post("/api/db/user/:username/:planet/createZone", (req, res) => {});
  * @param req.params: { username, planet, zone }
  * @return Array - An array containing the ZoneContent documents data
  */
-app.get("/api/db/user/:username/:planet/:zone/zonecontents", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zone/:zone/zonecontents", (req, res) => {});
 
 /** DB endpoint: Queries the database for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.get("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.get("/api/db/user/:username/planet/:planet/zone/:zone/zonecontent/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Updates the document for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.put("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.put("/api/db/user/:username/planet/:planet/zone/:zone/zonecontent/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Deletes the document for a specific zonecontent
   * under a specific zone under a specific planet under a specific user
   * @param req.params: { username, planet, zone, zonecontent }
   * @return Map - An object containing the ZoneContent document data
   */
-app.delete("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet/zone/:zone/zonecontent/:zonecontent", (req, res) => {});
 
 /** DB endpoint: Creates a new zonecontent document under a specific zone
   * under a specific planet under a specific user
@@ -985,7 +1099,7 @@ app.delete("/api/db/user/:username/:planet/:zone/:zonecontent", (req, res) => {}
   *    },
   * }
   */
-app.post("/api/db/user/:username/:planet/:zone/createContent", (req, res) => {});
+app.post("/api/db/user/:username/planet/:planet/zone/:zone/createContent", (req, res) => {});
 
 
 /** Firestore Group Query Endpoints
