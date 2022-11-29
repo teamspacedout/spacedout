@@ -616,20 +616,20 @@ app.get("/api/db/user/:username/planet/:planet", (req, res) => {
     return uid;
   }).then((foundUid) => {
     const collectionPath = `Users/${foundUid}/Planets`;
-    return firestore.collection(collectionPath).doc(planetName).get()
-        .then((doc) => {
-          if (doc.exists) {
+    return firestore.collection(collectionPath).where("Planet_name", "==", planetName)
+        .limit(1).get().then((doc) => {
+          if (doc.docs[0].exists) {
             const data = {
-              Creation_time: doc.data().Creation_time.toDate(),
-              uid: doc.data().uid,
-              Username: doc.data().Username,
-              Planet_name: doc.data().Planet_name,
-              Planet_description: doc.data().Planet_description,
-              Planet_image: doc.data().Planet_image,
-              Planet_settings: doc.data().Planet_settings,
-              Tags: doc.data().Tags,
-              Zone_count: doc.data().Zone_count,
-              Zones: doc.data().Zones,
+              Creation_time: doc.docs[0].data().Creation_time.toDate(),
+              uid: doc.docs[0].data().uid,
+              Username: doc.docs[0].data().Username,
+              Planet_name: doc.docs[0].data().Planet_name,
+              Planet_description: doc.docs[0].data().Planet_description,
+              Planet_image: doc.docs[0].data().Planet_image,
+              Planet_settings: doc.docs[0].data().Planet_settings,
+              Tags: doc.docs[0].data().Tags,
+              Zone_count: doc.docs[0].data().Zone_count,
+              Zones: doc.docs[0].data().Zones,
             };
             console.dir({data}, {depth: null});
             return res.status(200).send(data);
@@ -841,7 +841,7 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
     if (foundUid === "invalid") {
       return foundUid;
     } else {
-    // Validate and create planet
+      // Validate and create planet
       const userRef = firestore.doc(`Users/${uid}`);
 
       let userPlanetCount = -1;
@@ -858,9 +858,11 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
         const planetsRef = userRef.collection("Planets");
 
         // Validate unique planet name
-        if (planets[validPlanetName]) {
-          const newName = String(Math.floor(Math.random() * 99999));
-          validPlanetName = validPlanetName + "_" + newName;
+        for (const planet of Object.keys(planets)) {
+          if (planets[planet].Planet_name === validPlanetName) {
+            const newName = String(Math.floor(Math.random() * 99999));
+            validPlanetName = validPlanetName + "_" + newName;
+          }
         }
 
         // Create Planet object for Planet Document
@@ -878,7 +880,7 @@ app.post("/api/db/user/:username/createPlanet", (req, res) => {
         };
 
         // Set planet
-        return planetsRef.doc(validPlanetName).set(newPlanet)
+        return planetsRef.doc().set(newPlanet)
             .then((writeTime) => {
               const planetCount = userPlanetCount + 1;
 
