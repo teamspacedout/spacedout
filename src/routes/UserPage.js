@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import NavBar from "../components/NavBar";
 import PlanetOrbit from "../components/PlanetOrbit";
 import PlanetButton from "../components/PlanetButton";
@@ -15,17 +15,32 @@ function UserPage(props) {
     const navigate = useNavigate();
 
     const {user, username} = useContext(UserLogin);
+    const [page, setPage] = useState({data: null});
 
 
-    const getData = async () => {
+    useEffect(() => {
+
+        (async () => {
+            setPage({data: (await getData()).data})
+        })()
+
+
+    }, []);
+
+
+    /**
+     *
+     *  @12/1/2022 - Using local API endpoints, will need to be adjusted to live version at some point
+     * @returns Axios Promise or Naviagtes to 404 Page if fails :(
+     */
+    async function getData() {
         try {
-            const response = await axios.get(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${name}`);
-        } catch (error) {
+            return await axios.get(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${name}`);
+        } catch (e) {
             return navigate('/404');
         }
     }
 
-    const userInfo = getData();
 
     return (
         <main>
