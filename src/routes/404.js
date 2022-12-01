@@ -10,7 +10,7 @@ function FourZeroFour(props)
                 404
             </div>
             <Logo size="large"/>
-            <div className="text-xl text-red-50 place-items-center"> You are not in the right side of the galaxy, head <Link className="link link-primary text-purple-300" to='../'> home</Link> </div>
+            <div className="text-xl text-white place-items-center"> You are not in the right side of the galaxy, head <Link className="link link-primary text-purple-300" to='../'> home</Link> </div>
         </div>
     );
 }
