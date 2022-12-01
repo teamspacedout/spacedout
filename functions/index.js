@@ -836,7 +836,100 @@ app.put("/api/db/user/:username/planet/:planet", (req, res) => {
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.delete("/api/db/user/:username/planet/:planet", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet", (req, res) => {
+  const username = req.params.username.trim();
+  const planetName = req.params.planet.trim();
+  const usersRef = firestore.collection("Users");
+  const userDoc = usersRef.where("Username", "==", username).limit(1);
+  let uid = "";
+  const currentUserDocData = {};
+
+  return userDoc.get().then((userDocument) => {
+    if (userDocument.docs.length > 0) {
+      uid = userDocument.docs[0].data().uid;
+      Object.assign(currentUserDocData, userDocument.docs[0].data());
+    } else {
+      uid = "invalid";
+    }
+    console.log({currentUserDocData});
+    return uid;
+  }).then((foundUid) => {
+    if (foundUid !== "invalid") {
+      const collectionPath = `Users/${foundUid}/Planets`;
+      const userDocPath = `Users/${foundUid}`;
+
+      console.log(`Collection Path: ${collectionPath}`);
+
+      // Get Planet document
+      return firestore.collection(collectionPath)
+          .where("Planet_name", "==", planetName)
+          .limit(1).get().then((doc) => {
+            if (doc.docs.length > 0 && doc.docs[0].exists) {
+              // Store data before delete
+              const data = {
+                Creation_time: doc.docs[0].data().Creation_time.toDate(),
+                uid: doc.docs[0].data().uid,
+                Username: doc.docs[0].data().Username,
+                Planet_name: doc.docs[0].data().Planet_name,
+                Planet_description: doc.docs[0].data().Planet_description,
+                Planet_image: doc.docs[0].data().Planet_image,
+                Planet_settings: doc.docs[0].data().Planet_settings,
+                Tags: doc.docs[0].data().Tags,
+                Zone_count: doc.docs[0].data().Zone_count,
+                Zones: doc.docs[0].data().Zones,
+              };
+
+              // Create User document update object
+              const newUserData = {
+                Planets: {},
+                Planet_count: Number(currentUserDocData.Planet_count),
+              };
+              const currentPlanets = currentUserDocData.Planets;
+              console.log("Before filter: ", {newUserData, currentPlanets});
+
+              // Filter out planet to be deleted
+              for (const key in currentPlanets) {
+                if (key !== planetName) {
+                  newUserData.Planets[key] = currentPlanets[key];
+                } else {
+                  newUserData.Planet_count -= 1;
+                }
+              }
+              console.dir("After filter: ", {newUserData}, {depth: 2});
+
+              // Recurively delete document and its subcollections
+              return firestore.recursiveDelete(doc.docs[0].ref).then(() => {
+                // Delete entry in Users document
+                return firestore.doc(userDocPath).update(newUserData)
+                    .then((writeResult) => {
+                      const logPlanetDelete = {
+                        DeletedAt: writeResult.writeTime.toDate(),
+                        CollectionPath: collectionPath,
+                        Planet: data,
+                      };
+                      const logUserUpdate = {
+                        userDocPath,
+                        currentUserDocData,
+                        newUserData,
+                      };
+                      const logObject = {logPlanetDelete, logUserUpdate};
+                      console.dir(logObject, {depth: null});
+                      return res.status(200).send(logObject);
+                    });
+              });
+            } else {
+              const errorMessage = {Error: `Planet ${planetName} not found.`};
+              return res.status(500).send(errorMessage);
+            }
+          });
+    } else {
+      return res.status(500).send({Error: `User ${username} not found.`});
+    }
+  }).catch((error)=>{
+    console.dir({Error: error.code}, {depth: null});
+    return res.status(400).send({Error: error.code, Message: error.message});
+  });
+});
 
 /** DB endpoint: Creates a new planet document under a specific user
  * @param req.params { username }
