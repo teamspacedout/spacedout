@@ -11,18 +11,18 @@ export function useUserAuth() {
         let unsubscribe;
 
         if(user) {
-            const userRef = collection(fireDB, 'Usernames');
+            const userRef = collection(fireDB, 'Users');
             const refDoc = doc(userRef, user.uid);
 
-            console.log(refDoc);
+           const value = doc(fireDB, "Users", user.uid)
 
-
-            unsubscribe = onSnapshot(refDoc, (doc) => {
-                setUsername(doc.data()?.name);
-                console.log(doc.data()?.name);
+            unsubscribe = onSnapshot(doc(fireDB, "Users", user.uid), (doc) => {
+                console.log(doc.data());
+                setUsername(doc.data()?.Username);
             })
         } else {
             setUsername(null);
+            
         }
 
         return unsubscribe;

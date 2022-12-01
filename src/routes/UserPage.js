@@ -5,24 +5,27 @@ import PlanetButton from "../components/PlanetButton";
 import Planet from "../components/Planet";
 import {FaAirbnb, FaFacebook, FaGoogle, FaInstagram, FaMagic, FaTiktok, FaTumblr, FaYahoo} from "react-icons/fa";
 import axios from "axios";
-import {useNavigate} from "react-router-dom";
+import {redirect, useNavigate} from "react-router-dom";
 import UserLogin from "../lib/context";
 
 function UserPage(props) {
 
     //const [person, username] = useContext(UserLogin);
-    const user = (window.location.pathname).slice(1);
+    const name = (window.location.pathname).slice(1);
     const navigate = useNavigate();
+
+    const {user, username} = useContext(UserLogin);
+
 
     const getData = async () => {
         try {
-            const response = await axios.get(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/auth/user/${user}`);
+            const response = await axios.get(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${name}`);
         } catch (error) {
             return navigate('/404');
         }
     }
 
-    console.log(getData());
+    const userInfo = getData();
 
     return (
         <main>
