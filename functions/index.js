@@ -20,6 +20,10 @@ const getUsersAuth = authUser.getUsers;
 const updateUserAuth = authUser.updateUser;
 const deleteUserAuth = authUser.deleteUser;
 
+const dbUser = require("./controllers/DBUser");
+const getUserDB = dbUser.getUser;
+const getUsersDB = dbUser.getUsers;
+const updateUserDB = dbUser.updateUser;
 
 
 app.get("/", (req, res) => {
@@ -106,33 +110,13 @@ app.post("/api/auth/user/signup", createUserAuth);
 /** DB endpoint: Queries the database for a list of users
  * @return: Array - An array containing the Users documents data
  */
-app.get("/api/db/users", (req, res) => {
-  const usersDocuments = [];
-  firestore.collection("Users").get()
-      .then((docs) => {
-        docs.forEach((doc) => {
-          usersDocuments.push(doc.data());
-        });
-        res.status(200).send(usersDocuments);
-      }).catch((error) => {
-        res.status(400).send({Error: error.code});
-      });
-});
+app.get("/api/db/users", getUsersDB);
 
 /** DB endpoint: Queries the database for a specific user
  * @param req.params: { username }
  * @return Map - An object containing the User document data
  */
-app.get("/api/db/user/:username", (req, res) => {
-  const username = req.params.username.trim();
-
-  firestore.collection("Users").where("Username", "==", username).limit(1)
-      .get().then((userDoc) => {
-        res.status(200).send(userDoc.docs[0].data());
-      }).catch((error) => {
-        res.status(400).send({error: error.code});
-      });
-});
+app.get("/api/db/user/:username", getUserDB);
 
 /** DB endpoint: Updates the document for a specific user
  * @param req.params: { username }
@@ -143,60 +127,7 @@ app.get("/api/db/user/:username", (req, res) => {
  * }
  * @return Map - An object containing the updated User document data
  */
-app.put("/api/db/user/:username", (req, res) => {
-  const username = req.params.username.trim();
-  const usersRef = firestore.collection("Users");
-  const userDoc = usersRef.where("Username", "==", username).limit(1);
-
-  const updatedUser = {
-    Profile_data: req.body.profileData ? req.body.profileData : undefined,
-    Profile_settings: req.body.profileSettings ? req.body.profileSettings : undefined,
-  };
-
-  // Check if data is undefined
-  let isDataEmpty = true;
-
-  for (const key in updatedUser) {
-    if (updatedUser[key] !== undefined && Object.values(updatedUser[key]).length > 0) {
-      isDataEmpty = false;
-    } else {
-      delete updatedUser[key];
-    }
-  }
-
-  if (!isDataEmpty) {
-    return userDoc.get().then((userDocument) => {
-      if (userDocument.docs.length > 0) {
-        const docId = userDocument.docs[0].id;
-        const userProfileData = userDocument.docs[0].data().Profile_data;
-        const userProfileSettings = userDocument.docs[0].data().Profile_settings;
-        const uid = userDocument.docs[0].data().uid;
-
-        // Update User document
-        return usersRef.doc(docId).update(updatedUser).then((writeResult) => {
-          const originalData = {
-            Profile_data: userProfileData,
-            Profile_settings: userProfileSettings,
-          };
-          const logUserUpdate = {
-            UpdatedAt: writeResult.writeTime.toDate(),
-            Username: username,
-            uid: uid,
-            originalData,
-            updatedFields: updatedUser,
-          };
-          return res.status(200).send(logUserUpdate);
-        });
-      } else {
-        return res.status(500).send({Error: "User not found"});
-      }
-    }).catch((error) => {
-      return res.status(500).send({Error: error.code});
-    });
-  } else {
-    return res.status(400).send({Error: "No valid data was sent"});
-  }
-});
+app.put("/api/db/user/:username", updateUserDB);
 
 
 /** Firestore Planets Subcollection Endpoints
