@@ -3,11 +3,11 @@ import {motion} from "framer-motion";
 
 
 
-function PlanetOrbit({defaultPlanet, animated, remainPlanets, showOrbit}) {
+function PlanetOrbit({defaultPlanet, animated, remainPlanets, showOrbit, scale}) {
 
 
     const [showButton, setButtonShown] = useState(showOrbit);
-    const [planetButtons, setPlanetButtons] = useState(remainPlanets);
+    const [planetButtons] = useState(remainPlanets);
 
     const handleClick = (e) => {
         setButtonShown(current => !current);
@@ -18,12 +18,8 @@ function PlanetOrbit({defaultPlanet, animated, remainPlanets, showOrbit}) {
          Utilizing Grid Layout
      */
 
-    const sections = ["col-start-1 col-end-2", "col-start-2 col-end-3", "col-start-3 col-end-4"];
-    const stylePlanet = {
-        backgroundColor: "rgb(249 168 212 / var(--tw-bg-opacity))",
-    };
-
     const circleGraph = {
+            scale: `${scale}`,
             position: "relative",
             width: 200,
             height: 200,
@@ -145,13 +141,14 @@ function PlanetOrbit({defaultPlanet, animated, remainPlanets, showOrbit}) {
 PlanetOrbit.defaultProps = {
     defaultPlanet: <DefaultPlanet/>,
     animated : true,
-    remainPlanets: true
+    remainPlanets: true,
+    scale: "100%"
 };
 
 
-function DefaultPlanet (props) {
+function DefaultPlanet () {
     return <div className="image-full scale-250 btn-circle shadow-md shadow-purple-200">
-        <img src="/assests/planets/Earth/4.png"/>
+        <img alt = "Image Icon" src="/assests/planets/Earth/4.png"/>
     </div>
 }
 export default PlanetOrbit;
