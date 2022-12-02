@@ -47,7 +47,7 @@ function UserPage(props) {
             <NavBar/>
             <div className=" grid grid-cols-1 md:grid-cols-3 gap-10 h-screen w-screen">
                 <PlanetOrbit
-                    defaultPlanet= {<Planet img = "/assests/planets/Lava/4.png"/>}
+                    defaultPlanet= {<Planet scale={"100%"} img = "/assests/planets/Lava/4.png"/>}
                     remainPlanets = {
                     [   <PlanetButton btnProperties = "btn-circle bg-red-500 grid place-items-center" reactIcon = {<FaAirbnb className="text-white"/>} />,
                         <PlanetButton btnProperties = "btn-circle bg-blue-500 grid place-items-center" reactIcon = {<FaFacebook className="text-white"/>}/>,
