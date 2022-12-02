@@ -13,6 +13,8 @@ import EditPlanet from "./routes/EditPlanet";
 import Settings from "./routes/Settings";
 import React from "react";
 import NavBar from "./components/NavBar";
+import FourZeroFour from "./routes/404";
+
 
 
 const router = createBrowserRouter([{
@@ -49,6 +51,10 @@ const router = createBrowserRouter([{
     {
         path: "/settings",
         element: <Settings />,
+    },
+    {
+        path: "/404",
+        element: <FourZeroFour />,
     },
 ])
 
