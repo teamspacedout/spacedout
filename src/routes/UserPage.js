@@ -5,10 +5,10 @@ import PlanetButton from "../components/PlanetButton";
 import Planet from "../components/Planet";
 import {FaAirbnb, FaFacebook, FaGoogle, FaInstagram, FaMagic, FaTiktok, FaTumblr, FaYahoo} from "react-icons/fa";
 import axios from "axios";
-import {redirect, useNavigate} from "react-router-dom";
+import {useNavigate} from "react-router-dom";
 import UserLogin from "../lib/context";
 
-function UserPage(props) {
+function UserPage() {
 
     //const [person, username] = useContext(UserLogin);
     const name = (window.location.pathname).slice(1);
@@ -47,6 +47,7 @@ function UserPage(props) {
             <NavBar/>
             <div className=" grid grid-cols-1 md:grid-cols-3 gap-10 h-screen w-screen">
                 <PlanetOrbit
+                    scale={"130%"}
                     defaultPlanet= {<Planet scale={"100%"} img = "/assests/planets/Lava/4.png"/>}
                     remainPlanets = {
                     [   <PlanetButton btnProperties = "btn-circle bg-red-500 grid place-items-center" reactIcon = {<FaAirbnb className="text-white"/>} />,
