@@ -33,7 +33,7 @@ function PlanetButton(props) {
                {
                    <motion.button
                 initial={{scale: 0}}
-                animate={{scale: 1}}
+                animate={{scale: props.scale}}
                 transition={{duration: 0.75}}
                 exit={{ scale: 0 }}
                 className= {props.btnProperties}
@@ -60,6 +60,7 @@ PlanetButton.defaultProps = {
     toolTip: "Home",
     Link: "/",
     hasToolTip: true,
-    isVisible: true
+    isVisible: true,
+    scale: 1
 }
 export default PlanetButton;
