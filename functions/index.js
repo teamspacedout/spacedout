@@ -5,52 +5,33 @@
  * terminated by the system
  */
 
-// const dotenv = require("dotenv");
-// dotenv.config();
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-// const {Logging} = require("@google-cloud/logging");
+const utils = require("./utils/config");
+const functions = utils.functions;
+const admin = utils.admin;
+const app = utils.app;
+const auth = utils.auth;
+const firestore = utils.firestore;
 
-const express = require("express");
-const app = express();
-const cors = require("cors")({origin: true});
 
-// const projectID = process.env.REACT_APP_FIREBASE_PROJECT_ID;
-// console.log(projectID);
+const authUser = require("./controllers/AuthUser");
+const createUserAuth = authUser.createUser;
+const getUserAuth = authUser.getUser;
+const getUsersAuth = authUser.getUsers;
+const updateUserAuth = authUser.updateUser;
+const deleteUserAuth = authUser.deleteUser;
 
-// Initialization
-// const logging = new Logging();
-// const log = logging.log("Initialization");
+const dbUser = require("./controllers/DBUser");
+const getUserDB = dbUser.getUser;
+const getUsersDB = dbUser.getUsers;
+const updateUserDB = dbUser.updateUser;
 
-// Create data for Cloud Logging log
-const METADATA = {
-  resource: {
-    type: "cloud_function",
-    labels: {
-      function_name: "App",
-      region: "us-central1",
-    },
-  },
-};
-const messageData = {
-  event: "Admin initialization",
-  value: "App successfully initialized",
-  message: "Admin initialization: App successfully initialized",
-};
+const dbPlanet = require("./controllers/DBPlanet");
+const createPlanetDB = dbPlanet.createPlanet;
+const getPlanetDB = dbPlanet.getPlanet;
+const getPlanetsDB = dbPlanet.getPlanets;
+const updatePlanetDB = dbPlanet.updatePlanet;
+const deletePlanetDB = dbPlanet.deletePlanet;
 
-// Write log to Cloud Logging
-// const entry = log.entry(METADATA, messageData);
-// log.write(entry);
-
-// Initialize App using Admin SDK
-const fireApp = admin.initializeApp();
-// functions.logger.log(`Started => Project: ${projectID}, Name: ${fireApp.name}`);
-
-// Create SDK references
-const auth = admin.auth();
-const firestore = admin.firestore();
-
-app.use(cors);
 
 
 app.get("/", (req, res) => {
@@ -87,57 +68,13 @@ app.get("/api", (req, res) => {
  * @return: Array - An array containing the UserRecord Auth objects
  * Currently limits request to 100 users
  */
-app.get("/api/auth/users", (req, res) => {
-  const usersList = [];
-  auth
-      .listUsers(100)
-      .then((listUsersResult) => {
-        listUsersResult.users.forEach((userRecord) => {
-          const providerIds = userRecord.providerData.map((provider) => {
-            return provider.providerId;
-          });
-          const strippedRecord = {
-            uid: userRecord.uid,
-            email: userRecord.email,
-            emailVerified: userRecord.emailVerified,
-            displayName: userRecord.displayName,
-            photoUrl: userRecord.photoURL,
-            metadata: userRecord.metadata,
-            providerId: providerIds,
-          };
-          usersList.push(strippedRecord);
-        });
-        res.send(usersList);
-      })
-      .catch((error) => {
-        res.status(400).send(error.code);
-      });
-});
+app.get("/api/auth/users", getUsersAuth);
 
 /** Auth endpoint: Queries Firebase Auth for a specific user
  * @param req.params: { user: The auth uid of the user }
  * @return Map - An object containing the UserRecord Auth data
  */
-app.get("/api/auth/user/:user", (req, res) => {
-  const userId = req.params.user.trim();
-  auth.getUser(userId).then((userRecord) => {
-    const providerIds = userRecord.providerData.map((provider) => {
-      return provider.providerId;
-    });
-    const userData = {
-      uid: userRecord.uid,
-      email: userRecord.email,
-      emailVerified: userRecord.emailVerified,
-      displayName: userRecord.displayName,
-      disabled: userRecord.disabled,
-      metadata: userRecord.metadata,
-      providerData: providerIds,
-    };
-    res.status(200).send(userData);
-  }).catch((error) => {
-    res.status(400).send(error.code);
-  });
-});
+app.get("/api/auth/user/:user", getUserAuth);
 
 /** Auth endpoint: Updates Firebase Auth for a specific user
  * @param req.params: { user: The auth uid of the user }
@@ -146,188 +83,7 @@ app.get("/api/auth/user/:user", (req, res) => {
  * {email, phoneNumber, emailVerified, password, displayName, photoUrl, disabled}
  * @return: Map - An object containing success state and updated user data }
  */
-app.put("/api/auth/user/:user", (req, res) => {
-  const uid = req.params.user.trim();
-  const updatedAuth = {
-    email: req.body.email ? req.body.email.trim() : undefined,
-    phoneNumber: req.body.phoneNumber ? req.body.phoneNumber.trim() : undefined,
-    emailVerified: req.body.emailVerified ? req.body.emailVerified.trim() : undefined,
-    password: req.body.password ? req.body.password.trim() : undefined,
-    displayName: req.body.displayName ? req.body.displayName.trim() : undefined,
-    photoURL: req.body.photoURL ? req.body.photoURL.trim() : undefined,
-    disabled: req.body.disabled ? req.body.disabled.trim() : undefined,
-  };
-
-  // Check if data is undefined
-  let isDataEmpty = true;
-
-  for (const key in updatedAuth) {
-    if (updatedAuth[key] !== undefined || updatedAuth[key] !== "") {
-      isDataEmpty = false;
-    } else {
-      delete updatedAuth[key];
-    }
-  }
-
-
-  if (isDataEmpty) {
-    return res.status(500).send({Error: "No valid data was sent!"});
-  } else {
-    return auth.getUser(uid).then((userRecord) => {
-      const username = userRecord.displayName;
-
-      // Check if username is being updated
-      if (updatedAuth.displayName && updatedAuth.displayName !== username) {
-        const newUsername = updatedAuth.displayName;
-        const oldUsername = userRecord.displayName;
-        const usersRef = firestore.collection("Users");
-
-        // Check if new displayName is not taken
-        const usernameRef = usersRef.where("Username", "==", newUsername).limit(1);
-        return usernameRef.get()
-            .then((userDoc) => {
-              if (userDoc.docs.length > 0) {
-                updatedAuth.displayName = oldUsername;
-                return {Error: `Username ${newUsername} is already taken.`};
-              } else {
-                // Username is not taken. Update both Users doc
-                return usersRef.doc(uid).update({
-                  Username: newUsername,
-                }).then((userWriteResult) => {
-                  // Update Planets subcollection
-                  const planetsRef = firestore.collection(`Users/${uid}/Planets`);
-                  return planetsRef.get().then((planetsDocs)=>{
-                    return Promise.all(planetsDocs.docs.map((planetDoc) => {
-                      return planetDoc.ref.update({Username: newUsername})
-                          .then((writeResult) => {
-                            const data = {
-                              updatedAt: writeResult.writeTime.toDate(),
-                              Planet_name: planetDoc.data().Planet_name,
-                            };
-                            return data;
-                          });
-                    }));
-                  }).then((records) => {
-                    const userRecord = {
-                      New_Username: updatedAuth.displayName,
-                      Old_Username: oldUsername,
-                      userWriteResult: userWriteResult.writeTime.toDate(),
-                    };
-                    const writeResults = {
-                      userRecord,
-                      planetsRecord: records,
-                    };
-                    return writeResults;
-                  });
-                }).then((usernameWriteResult) => {
-                  const writeTime = {
-                    userWriteResult: usernameWriteResult.userRecord,
-                    planetsWriteResult: usernameWriteResult.planetsRecord,
-                  };
-                  return writeTime;
-                });
-              }
-            }).then((userUpdateData) => {
-              if (userUpdateData.Error) {
-                return res.status(500).send({userUpdateData});
-              }
-              // Update user record
-              return auth.updateUser(uid, updatedAuth).then((updatedUserRecord) => {
-                const result = {
-                  Status: "Successful",
-                  updatedUserRecord: {
-                    uid: updatedUserRecord.uid,
-                    email: updatedUserRecord.email,
-                    phoneNumber: updatedUserRecord.phoneNumber,
-                    emailVerified: updatedUserRecord.emailVerified,
-                    displayName: updatedUserRecord.displayName,
-                    photoURL: updatedUserRecord.photoURL,
-                    disabled: updatedUserRecord.disabled,
-                  },
-                };
-                return res.status(200).send({result, userUpdateData});
-              });
-            });
-      } else {
-        const removedUsername = {displayName: undefined};
-        const strippedAuth = Object.assign({}, updatedAuth, removedUsername);
-        if (Object.values(strippedAuth).every((val) => val === undefined)) {
-          const result = {
-            Status: "Unchanged",
-            Completion_time: admin.firestore.Timestamp.now().toDate(),
-            requestData: updatedAuth,
-            UserRecord: {
-              uid: userRecord.uid,
-              email: userRecord.email,
-              phoneNumber: userRecord.phoneNumber,
-              emailVerified: userRecord.emailVerified,
-              displayName: userRecord.displayName,
-              photoURL: userRecord.photoURL,
-              disabled: userRecord.disabled,
-            },
-          };
-          console.dir({result}, {depth: null});
-          return res.status(200).send({result});
-        } else {
-          return auth.updateUser(uid, updatedAuth).then((updatedUserRecord) => {
-            const result = {
-              Status: "Successful",
-              Completion_time: admin.firestore.Timestamp.now().toDate(),
-              requestData: updatedAuth,
-              updatedUserRecord: {
-                uid: updatedUserRecord.uid,
-                email: updatedUserRecord.email,
-                phoneNumber: updatedUserRecord.phoneNumber,
-                emailVerified: updatedUserRecord.emailVerified,
-                displayName: updatedUserRecord.displayName,
-                photoURL: updatedUserRecord.photoURL,
-                disabled: updatedUserRecord.disabled,
-              },
-            };
-            console.dir({result}, {depth: null});
-            return res.status(200).send({result});
-          });
-        }
-      }
-    }).catch((error) => {
-      let errorResponse = {};
-
-      switch (error.code) {
-        case "auth/user-not-found":
-          errorResponse = {Error: "No valid user was found"};
-          break;
-        case "auth/email-already-in-use":
-          errorResponse = {Error: "Email address is already in use"};
-          break;
-
-        case "auth/email-already-exists":
-          errorResponse = {Error: "Email address is already in use"};
-          break;
-
-        case "auth/invalid-email":
-          errorResponse = {Error: "Email address is invalid"};
-          break;
-
-        case "auth/invalid-phone-number":
-          errorResponse = {Error: "Phone number is invalid"};
-          break;
-
-        case "auth/operation-not-allowed":
-          errorResponse = {Error: "Update failed, operation not permitted"};
-          break;
-
-        case "auth/weak-password":
-          errorResponse = {Error: "Password is not strong enough"};
-          break;
-
-        default:
-          errorResponse = {error: error.code};
-      }
-      res.status(500).send(errorResponse);
-      return;
-    });
-  }
-});
+app.put("/api/auth/user/:user", updateUserAuth);
 
 /** Auth endpoint: Deletes Firebase Auth for a specific user
  * Additionally deletes the user's User document and Username
@@ -335,30 +91,7 @@ app.put("/api/auth/user/:user", (req, res) => {
  * @param req.params: { user: The auth uid of the user }
  * @return: Map - An object containing success state and deleted user data
  */
-app.delete("/api/auth/user/:user", (req, res) => {
-  const uid = req.params.user.trim();
-
-  // Validate if user exists
-  return auth.getUser(uid).then((userRecord) => {
-    if (userRecord.uid && userRecord.uid === uid) {
-      const username = userRecord.displayName;
-
-      auth.deleteUser(uid).then(() => {
-        const responseMessage = {
-          uid,
-          username,
-          Status: "Deleted successfully",
-          deletedAt: admin.firestore.Timestamp.now().toDate(),
-        };
-        return res.status(200).send(responseMessage);
-      });
-    }
-  }).catch((error) => {
-    const errorMessage = `No user with uid: ${uid} was found`;
-    console.dir({error}, {depth: null});
-    return res.status(500).send({Error: errorMessage});
-  });
-});
+app.delete("/api/auth/user/:user", deleteUserAuth);
 
 /** Auth endpoint: Processes user account signup
  * Creates a User with Firebase Authentication
@@ -371,76 +104,7 @@ app.delete("/api/auth/user/:user", (req, res) => {
  * @param req.body: { email, password, displayName }
  * @return: Map - { displayName, uid, authToken }
  */
-app.post("/api/auth/user/signup", (req, res) => {
-  // Create User Auth object from request data
-  const user = {
-    email: req.body.email ? req.body.email.trim() : undefined,
-    emailVerified: false,
-    password: req.body.password ? req.body.password.trim() : undefined,
-    displayName: req.body.displayName ? req.body.displayName.trim() : undefined,
-  };
-
-  let isDataInvalid = false;
-  const errorMessage = {};
-
-  for (const key in user) {
-    if (user[key] === undefined || user[key] === "") {
-      isDataInvalid = true;
-      errorMessage[key] = "Invalid or missing value.";
-    }
-  }
-
-  if (isDataInvalid) {
-    return res.status(500).send({Error: errorMessage});
-  } else {
-    // Create user using Firebase Auth
-    return auth.createUser(user)
-        .then((userRecord) => {
-        // Create Auth Token for Client
-          const uid = userRecord.uid;
-          return auth.createCustomToken(uid).then((data) => {
-            const user = {
-              displayName: userRecord.displayName,
-              uid,
-              authToken: data,
-            };
-            return res.status(200).send(user);
-          });
-        })
-        .catch((error) => {
-          let errorResponse = {};
-          switch (error.code) {
-            case "auth/email-already-in-use":
-              errorResponse = {Error: "Email address is already in use"};
-              break;
-
-            case "auth/email-already-exists":
-              errorResponse = {Error: "Email address is already in use"};
-              break;
-
-            case "auth/invalid-email":
-              errorResponse = {Error: "Email address is invalid"};
-              break;
-
-            case "auth/operation-not-allowed":
-              errorResponse = {Error: "Signup failed, operation not permitted"};
-              break;
-
-            case "auth/weak-password":
-              errorResponse = {Error: "Password is not strong enough"};
-              break;
-
-            case "auth/invalid-password":
-              errorResponse = {Error: "Password is invalid or missing"};
-              break;
-
-            default:
-              errorResponse = {Error: error.code};
-          }
-          return res.status(500).send(errorResponse);
-        });
-  }
-});
+app.post("/api/auth/user/signup", createUserAuth);
 
 
 /** Firebase Firestore Endpoints
@@ -454,33 +118,13 @@ app.post("/api/auth/user/signup", (req, res) => {
 /** DB endpoint: Queries the database for a list of users
  * @return: Array - An array containing the Users documents data
  */
-app.get("/api/db/users", (req, res) => {
-  const usersDocuments = [];
-  firestore.collection("Users").get()
-      .then((docs) => {
-        docs.forEach((doc) => {
-          usersDocuments.push(doc.data());
-        });
-        res.status(200).send(usersDocuments);
-      }).catch((error) => {
-        res.status(400).send({Error: error.code});
-      });
-});
+app.get("/api/db/users", getUsersDB);
 
 /** DB endpoint: Queries the database for a specific user
  * @param req.params: { username }
  * @return Map - An object containing the User document data
  */
-app.get("/api/db/user/:username", (req, res) => {
-  const username = req.params.username.trim();
-
-  firestore.collection("Users").where("Username", "==", username).limit(1)
-      .get().then((userDoc) => {
-        res.status(200).send(userDoc.docs[0].data());
-      }).catch((error) => {
-        res.status(400).send({error: error.code});
-      });
-});
+app.get("/api/db/user/:username", getUserDB);
 
 /** DB endpoint: Updates the document for a specific user
  * @param req.params: { username }
@@ -491,60 +135,7 @@ app.get("/api/db/user/:username", (req, res) => {
  * }
  * @return Map - An object containing the updated User document data
  */
-app.put("/api/db/user/:username", (req, res) => {
-  const username = req.params.username.trim();
-  const usersRef = firestore.collection("Users");
-  const userDoc = usersRef.where("Username", "==", username).limit(1);
-
-  const updatedUser = {
-    Profile_data: req.body.profileData ? req.body.profileData : undefined,
-    Profile_settings: req.body.profileSettings ? req.body.profileSettings : undefined,
-  };
-
-  // Check if data is undefined
-  let isDataEmpty = true;
-
-  for (const key in updatedUser) {
-    if (updatedUser[key] !== undefined && Object.values(updatedUser[key]).length > 0) {
-      isDataEmpty = false;
-    } else {
-      delete updatedUser[key];
-    }
-  }
-
-  if (!isDataEmpty) {
-    return userDoc.get().then((userDocument) => {
-      if (userDocument.docs.length > 0) {
-        const docId = userDocument.docs[0].id;
-        const userProfileData = userDocument.docs[0].data().Profile_data;
-        const userProfileSettings = userDocument.docs[0].data().Profile_settings;
-        const uid = userDocument.docs[0].data().uid;
-
-        // Update User document
-        return usersRef.doc(docId).update(updatedUser).then((writeResult) => {
-          const originalData = {
-            Profile_data: userProfileData,
-            Profile_settings: userProfileSettings,
-          };
-          const logUserUpdate = {
-            UpdatedAt: writeResult.writeTime.toDate(),
-            Username: username,
-            uid: uid,
-            originalData,
-            updatedFields: updatedUser,
-          };
-          return res.status(200).send(logUserUpdate);
-        });
-      } else {
-        return res.status(500).send({Error: "User not found"});
-      }
-    }).catch((error) => {
-      return res.status(500).send({Error: error.code});
-    });
-  } else {
-    return res.status(400).send({Error: "No valid data was sent"});
-  }
-});
+app.put("/api/db/user/:username", updateUserDB);
 
 
 /** Firestore Planets Subcollection Endpoints
@@ -556,92 +147,14 @@ app.put("/api/db/user/:username", (req, res) => {
  * @param req.params: { username }
  * @return Array - An array containing the Planets documents data
  */
-app.get("/api/db/user/:username/planets", (req, res) => {
-  const username = req.params.username.trim();
-  const usersRef = firestore.collection("Users");
-  const userDoc = usersRef.where("Username", "==", username).limit(1);
-  const planetsDocuments = [];
-  let uid = "";
-
-  return userDoc.get().then((userDocument) => {
-    if (userDocument.docs.length > 0) {
-      uid = userDocument.docs[0].data().uid;
-    } else {
-      uid = "invalid";
-    }
-    return uid;
-  }).then((foundUid) => {
-    return firestore.collection(`Users/${foundUid}/Planets`).get()
-        .then((docs) => {
-          docs.forEach((doc) => {
-            const data = {
-              Creation_time: doc.data().Creation_time.toDate(),
-              uid: doc.data().uid,
-              Zone_count: doc.data().Zone_count,
-              Username: doc.data().Username,
-              Planet_name: doc.data().Planet_name,
-              Planet_description: doc.data().Planet_description,
-              Planet_settings: doc.data().Planet_settings,
-              Tags: doc.data().Tags,
-              Planet_image: doc.data().Planet_image,
-              Zones: doc.data().Zones,
-            };
-            planetsDocuments.push(data);
-          });
-          return res.status(200).send(planetsDocuments);
-        });
-  }).catch((error) => {
-    return res.status(400).send({Error: error.code});
-  });
-});
+app.get("/api/db/user/:username/planets", getPlanetsDB);
 
 /** DB endpoint: Queries the database for a specific planet
  * under a specific user
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.get("/api/db/user/:username/planet/:planet", (req, res) => {
-  const username = req.params.username.trim();
-  const planetName = req.params.planet.trim();
-  const usersRef = firestore.collection("Users");
-  const userDoc = usersRef.where("Username", "==", username).limit(1);
-  let uid = "";
-
-  return userDoc.get().then((userDocument) => {
-    if (userDocument.docs.length > 0) {
-      uid = userDocument.docs[0].data().uid;
-    } else {
-      uid = "invalid";
-    }
-    return uid;
-  }).then((foundUid) => {
-    const collectionPath = `Users/${foundUid}/Planets`;
-    return firestore.collection(collectionPath).where("Planet_name", "==", planetName)
-        .limit(1).get().then((doc) => {
-          if (doc.docs[0].exists) {
-            const data = {
-              Creation_time: doc.docs[0].data().Creation_time.toDate(),
-              uid: doc.docs[0].data().uid,
-              Username: doc.docs[0].data().Username,
-              Planet_name: doc.docs[0].data().Planet_name,
-              Planet_description: doc.docs[0].data().Planet_description,
-              Planet_image: doc.docs[0].data().Planet_image,
-              Planet_settings: doc.docs[0].data().Planet_settings,
-              Tags: doc.docs[0].data().Tags,
-              Zone_count: doc.docs[0].data().Zone_count,
-              Zones: doc.docs[0].data().Zones,
-            };
-            console.dir({data}, {depth: null});
-            return res.status(200).send(data);
-          } else {
-            return res.status(500).send({Error: `Planet ${planetName} not found.`});
-          }
-        });
-  }).catch((error)=>{
-    console.dir({Error: error.code}, {depth: null});
-    return res.status(400).send({Error: error.code});
-  });
-});
+app.get("/api/db/user/:username/planet/:planet", getPlanetDB);
 
 /** DB endpoint: Updates the document for a specific planet
  * under a specific user
@@ -655,188 +168,14 @@ app.get("/api/db/user/:username/planet/:planet", (req, res) => {
  * }
  * @return Map - An object containing the Planet document data
  */
-app.put("/api/db/user/:username/planet/:planet", (req, res) => {
-  const username = req.params.username.trim();
-  const planetName = req.params.planet.trim();
-  const usersRef = firestore.collection("Users");
-  const userDoc = usersRef.where("Username", "==", username).limit(1);
-  let uid = "";
-
-  const updatedData = {
-    Planet_name: req.body.planetName ? req.body.planetName.trim() : undefined,
-    Planet_description: req.body.planetDescription ? req.body.planetDescription.trim() : undefined,
-    Planet_image: req.body.planetImage ? req.body.planetImage.trim() : undefined,
-    Planet_settings: Object.keys(req.body.planetSettings).length > 1 ? req.body.planetSettings : undefined,
-    Tags: req.body.tags ? req.body.tags : undefined,
-  };
-
-  // Check if data is undefined
-  let isDataEmpty = true;
-
-  for (const key in updatedData) {
-    if (updatedData[key] !== undefined || updatedData[key] !== "") {
-      isDataEmpty = false;
-    } else {
-      delete updatedData[key];
-    }
-  }
-
-  let userPlanets = {};
-
-  if (!isDataEmpty) {
-    return userDoc.get().then((userDocument) => {
-      if (userDocument.docs.length > 0) {
-        uid = userDocument.docs[0].data().uid;
-        userPlanets = userDocument.docs[0].data().Planets;
-      } else {
-        uid = "invalid";
-      }
-      return uid;
-    }).then((foundUid) => {
-      const collectionPath = `Users/${foundUid}/Planets`;
-      // Update Planets document
-      return firestore.collection(collectionPath)
-          .where("Planet_name", "==", planetName).limit(1).get()
-          .then((planetDoc) => {
-            if (planetDoc.docs[0].exists) {
-              const currentData = {
-                Planet_name: planetDoc.docs[0].data().Planet_name,
-                Planet_description: planetDoc.docs[0].data().Planet_description,
-                Planet_image: planetDoc.docs[0].data().Planet_image,
-                Planet_settings: planetDoc.docs[0].data().Planet_settings,
-                Tags: planetDoc.docs[0].data().Tags,
-              };
-
-              const updatedFields = {};
-
-              // Filter out unchanged values
-              for (const key in currentData) {
-                if (updatedData[key] && currentData[key] !== updatedData[key]) {
-                  updatedFields[key] = updatedData[key];
-                }
-              }
-
-              // Update Planets document
-              return planetDoc.docs[0].ref.update(updatedFields)
-                  .then((writeResult) => {
-                    const logPlanetUpdate = {
-                      UpdatedAt: writeResult.writeTime.toDate(),
-                      Username: username,
-                      Request: updatedData,
-                      UpdatedFields: updatedFields,
-                      CurrentData: currentData,
-                    };
-                    return logPlanetUpdate;
-                  }).then((logPlanetUpdate) => {
-                    // Update User document if relevant fields changed value
-                    const userPlanetData = logPlanetUpdate.UpdatedFields;
-
-                    // Filter out unchanged values
-                    const updatedUserFields = {
-                      Planet_name: userPlanetData.Planet_name,
-                      Planet_description: userPlanetData.Planet_description,
-                      Planet_image: userPlanetData.Planet_image,
-                    };
-
-                    // Strip out undefined fields
-                    for (const key in updatedUserFields) {
-                      if (updatedFields[key] === undefined) {
-                        delete updatedUserFields[key];
-                      }
-                    }
-
-                    // Update Planets object
-                    const userDocUpdate = {};
-                    userDocUpdate.Planets = Object.assign(userPlanets);
-
-                    // Check if Planet name is being updated
-                    const updatedPName = updatedUserFields.Planet_name;
-                    const currentPName = currentData.Planet_name;
-                    if (updatedPName && updatedPName !== currentPName) {
-                      // Get old planet data
-                      const planetCopy = Object.assign(currentData);
-
-                      // Copy old data to new planet
-                      for (const key in updatedUserFields) {
-                        // Overwrite updated values
-                        if (planetCopy[key] !== updatedUserFields[key]) {
-                          planetCopy[key] = updatedUserFields[key];
-                        }
-                      }
-
-                      // Remove unnecessary fields
-                      for (const key in planetCopy) {
-                        if (key === "Tags" || key === "Planet_settings") {
-                          delete planetCopy[key];
-                        }
-                      }
-                      // Copy zone count
-                      const targetPlanet = userDocUpdate.Planets[planetName];
-                      const zoneCount = targetPlanet.Zone_count;
-                      planetCopy.Zone_count = zoneCount;
-
-                      // Assign updated planet to Planets map
-                      const updateTarget = userDocUpdate.Planets;
-                      updateTarget[planetCopy.Planet_name] = planetCopy;
-
-                      // Delete old planet from Planets map
-                      for (const key in userDocUpdate.Planets) {
-                        if (key === planetName) {
-                          delete userDocUpdate.Planets[key];
-                        }
-                      }
-                    } else {
-                      // Update fields
-                      for (const key in updatedUserFields) {
-                        if (updatedFields[key]) {
-                          const data = updatedUserFields[key];
-                          userDocUpdate.Planets[planetName][key] = data;
-                        }
-                      }
-                    }
-
-                    if (updatedUserFields) {
-                      const userDocPath = `Users/${foundUid}`;
-
-                      return firestore.doc(userDocPath).update(userDocUpdate)
-                          .then((userWriteResult) => {
-                            const logUserUpdate = {
-                              UpdatedAt: userWriteResult.writeTime.toDate(),
-                              Username: username,
-                              uid: foundUid,
-                              UpdatedFields: updatedUserFields,
-                            };
-                            const logUpdates = {
-                              logPlanetUpdate,
-                              logUserUpdate,
-                            };
-                            console.dir({logUpdates}, {depth: null});
-                            return res.status(200).send(logUpdates);
-                          });
-                    } else {
-                      console.dir({logPlanetUpdate}, {depth: null});
-                      return res.status(200).send(logPlanetUpdate);
-                    }
-                  });
-            } else {
-              return res.status(500).send({Error: `Planet ${planetName} not found.`});
-            }
-          });
-    }).catch((error)=>{
-      console.dir({Error: error.code}, {depth: null});
-      return res.status(500).send({Error: error.code});
-    });
-  } else {
-    return res.status(500).send({Error: "Invalid data sent in request"});
-  }
-});
+app.put("/api/db/user/:username/planet/:planet", updatePlanetDB);
 
 /** DB endpoint: Deletes the document for a specific planet
  * under a specific user
  * @param req.params: { username, planet }
  * @return Map - An object containing the Planet document data
  */
-app.delete("/api/db/user/:username/planet/:planet", (req, res) => {});
+app.delete("/api/db/user/:username/planet/:planet", deletePlanetDB);
 
 /** DB endpoint: Creates a new planet document under a specific user
  * @param req.params { username }
@@ -869,109 +208,7 @@ app.delete("/api/db/user/:username/planet/:planet", (req, res) => {});
  *    },
  * }
  */
-app.post("/api/db/user/:username/createPlanet", (req, res) => {
-  console.dir({Request: req.body}, {depth: null});
-
-  const username = req.params.username.trim();
-  const planetName = req.body.planetName.trim();
-  const planetDescription = req.body.planetDescription.trim();
-  const planetImage = req.body.planetImage.trim();
-  const planetTags = req.body.planetTags;
-
-  const usersRef = firestore.collection("Users");
-  const userDoc = usersRef.where("Username", "==", username).limit(1);
-  let uid = "";
-
-  // Validate User is in the Users collection
-  return userDoc.get().then((userDocument) => {
-    if (userDocument.docs.length > 0) {
-      uid = userDocument.docs[0].data().uid;
-    } else {
-      uid = "invalid";
-    }
-
-    return uid;
-  }).then((foundUid) => {
-    if (foundUid === "invalid") {
-      return foundUid;
-    } else {
-      // Validate and create planet
-      const userRef = firestore.doc(`Users/${uid}`);
-
-      let userPlanetCount = -1;
-      let planets = {};
-
-      // Get user document data
-      return userRef.get().then((userDoc) => {
-        userPlanetCount = userDoc.data().Planet_count;
-        planets = userDoc.data().Planets;
-
-        let validPlanetName = planetName;
-
-        // Get User's Planet subcollection
-        const planetsRef = userRef.collection("Planets");
-
-        // Validate unique planet name
-        for (const planet of Object.keys(planets)) {
-          if (planets[planet].Planet_name === validPlanetName) {
-            const newName = String(Math.floor(Math.random() * 99999));
-            validPlanetName = validPlanetName + "_" + newName;
-          }
-        }
-
-        // Create Planet object for Planet Document
-        const newPlanet = {
-          Creation_time: admin.firestore.Timestamp.now().toDate(),
-          uid: uid,
-          Username: username,
-          Planet_name: validPlanetName,
-          Planet_description: planetDescription,
-          Planet_image: "",
-          Planet_settings: {},
-          Tags: planetTags,
-          Zone_count: 0,
-          Zones: {},
-        };
-
-        // Set planet
-        return planetsRef.doc().set(newPlanet)
-            .then((writeTime) => {
-              const planetCount = userPlanetCount + 1;
-
-              const userPlanet = {
-                Planet_name: newPlanet.Planet_name,
-                Planet_description: newPlanet.Planet_description,
-                Planet_image: newPlanet.Planet_image,
-                Zone_count: newPlanet.Zone_count,
-              };
-              planets[userPlanet.Planet_name] = userPlanet;
-
-              const updatedUserData = {
-                Planets: planets,
-                Planet_count: planetCount,
-              };
-
-              return userRef.update(updatedUserData)
-                  .then((updateWriteResult) => {
-                    const Response = {
-                      Status: "Created",
-                      uid,
-                      Username: username,
-                      User_updatedAt: updateWriteResult.writeTime.toDate(),
-                      doc_id: planetName,
-                      Planet_doc: newPlanet,
-                    };
-                    console.dir({Response}, {depth: null});
-                    return res.status(200).send({Response});
-                  });
-            });
-      });
-    }
-  }).catch((error) => {
-    console.dir({Error: error.code}, {depth: null});
-    return res.status(500).send({error: error.code});
-  });
-});
+app.post("/api/db/user/:username/createPlanet", createPlanetDB);
 
 
 /** Firestore Zones Subcollection Endpoints
