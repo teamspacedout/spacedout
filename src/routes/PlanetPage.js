@@ -2,135 +2,59 @@ import { transform } from 'lodash';
 import React from 'react';
 import {FaMapMarker} from 'react-icons/fa'
 import{MdPersonPinCircle} from 'react-icons/md'
+import PlanetOrbit from "../components/PlanetOrbit";
+import PlanetButton from "../components/PlanetButton";
+import Planet from "../components/Planet";
+import NamePlate from "../components/NamePlate";
+import NavBar from "../components/NavBar"
+import {FaAirbnb, FaFacebook, FaGoogle, FaInstagram, FaMagic, FaTiktok, FaTumblr, FaYahoo} from "react-icons/fa";
 
 
-function Planet(){
+
+function PlanetPage(){
 
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection:'column',
-        //justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '100vh',
-        minWidth:'100vw'
-      }}  
-     >
-      <div id='Gamer'
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'end',
-          minHeight: '80vh',
-          minWidth:'100vh'
-        }}
-      >
+    <>
+    <NavBar></NavBar>
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      height: '100vh',
+      
+      
 
 
-          <div 
-            style={{
-              
-              minHeight: 450,
-              minWidth: 450,
-              borderRadius: '50%',
-              backgroundImage: `url("https://as1.ftcdn.net/v2/jpg/04/75/82/66/1000_F_475826660_j6bBIUggy3xtcXpmRRQfeKB1DCvtj67y.jpg")`,
-              backgroundPosition: 'center',
-              backgroundSize: '700px, 700px',
-              zIndex:0,
-              position: 'fixed'
-              
-             
+
+    }}>
+      
+      <div class="grid grid-cols-1 gap-4">
+
+<div>
+      <PlanetOrbit scale={"225%"}
+                    defaultPlanet= {<Planet img = "/assests/planets/Ice/4.png" scale={"125%"}/>}
+                    remainPlanets = {[<PlanetButton scale={.75}/>, <PlanetButton scale={.75}/> ,  <PlanetButton scale={.75}/>]}
+      />
+</div>
+
+      <div style={{
+        display: 'inline-block',
+        zIndex:'1',
+        transform: 'translate(0px, 20px)'
+      }}>
+      <NamePlate name={"SPACED OUT PRIME"}></NamePlate>
+      </div>
+      
+
+      
             
-            }}
-          >
-        
-          </div>
-          <FaMapMarker
-            style={{
-              height: 80,
-              width: 80,
-              color: 'aliceblue',
-              transform: 'translate(-225px, -225px)',
-              zIndex:1,
-              position: 'fixed'
-            }}
-          />
-           <FaMapMarker
-            style={{
-              height: 80,
-              width: 80,
-              color: 'aliceblue',
-              transform: 'translate(225px, -225px)',
-              zIndex:1,
-              position: 'fixed'
-            }}
-          />
-          <MdPersonPinCircle
-            style={{
-              height: 95,
-              width: 95,
-              color: 'aliceblue',
-              transform: 'translate(0px, -450px)',
-              zIndex:1,
-              position: 'fixed'
-            }}
-          />
-          <FaMapMarker
-            style={{
-              height: 80,
-              width: 80,
-              color: 'aliceblue',
-              transform: 'translate(-159px, -384px)',
-              zIndex:1,
-              position: 'fixed'
-            }}
-          />
-           <FaMapMarker
-            style={{
-              height: 80,
-              width: 80,
-              color: 'aliceblue',
-              transform: 'translate(159px, -384px)',
-              zIndex:1,
-              position: 'fixed'
-            }}
-          />
-           
           
 
-
-      
-
-            
       </div>
-      
-     <h1
-      style={{
-        backgroundColor:'black',
-        //opacity:.5,
-        padding:'20px',
-        borderRadius:'25%',
-        transform: 'translate(0px, 550px)',
-        position: 'fixed',
-        border: '1px solid white',
-        color:'white',
-        textShadow: '2px 2px 18px white'
-   
 
-
-
-
-
-      }}
-     >
-      SPACED OUT PRIME
-     </h1>
-
- 
-
-      </div>
+    </div>
+    </>
   );
 }
 
@@ -140,7 +64,7 @@ function Planet(){
 
 
 
-export default Planet;
+export default PlanetPage;
 
 
 
