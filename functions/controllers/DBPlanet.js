@@ -101,10 +101,11 @@ const getPlanet = (req, res) => {
  * @param req.params: { username, planet }
  * @param req.body:
  * {
- *      planetDescription,
- *      planetImage,
- *      planetSettings,
- *      tags,
+ *      planetName,                         (String) [OPTIONAL]
+ *      planetDescription,                  (String) [OPTIONAL]
+ *      planetImage,                        (String) [OPTIONAL]
+ *      planetSettings,                     (Map)    [OPTIONAL]
+ *      tags,                               (Array)  [OPTIONAL]
  * }
  * @return Map - An object containing the Planet document data
  */
@@ -120,7 +121,7 @@ const updatePlanet = (req, res) => {
         Planet_description: req.body.planetDescription ? req.body.planetDescription.trim() : undefined,
         Planet_image: req.body.planetImage ? req.body.planetImage.trim() : undefined,
         Planet_settings: Object.keys(req.body.planetSettings).length > 1 ? req.body.planetSettings : undefined,
-        Tags: req.body.tags ? req.body.tags : undefined,
+        Tags: req.body.tags && req.body.tags.length > 0 ? req.body.tags : undefined,
     };
 
     // Check if data is undefined
@@ -420,9 +421,9 @@ const createPlanet = (req, res) => {
 
     const username = req.params.username.trim();
     const planetName = req.body.planetName.trim();
-    const planetDescription = req.body.planetDescription.trim();
+    const planetDescription = req.body.planetDescription ? req.body.planetDescription.trim() : "";
     const planetImage = req.body.planetImage ? req.body.planetImage.trim() : "";
-    const planetTags = req.body.planetTags;
+    const planetTags = req.body.planetTags && req.body.planetTags.length > 0 ? req.body.planetTags : [];
 
     const usersRef = firestore.collection("Users");
     const userDoc = usersRef.where("Username", "==", username).limit(1);
@@ -438,7 +439,7 @@ const createPlanet = (req, res) => {
         return uid;
     }).then((foundUid) => {
         if (foundUid === "invalid") {
-        return foundUid;
+        return res.status(500).send({Error: "User not found!"});
         } else {
         // Validate and create planet
         const userRef = firestore.doc(`Users/${uid}`);

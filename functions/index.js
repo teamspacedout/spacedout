@@ -32,6 +32,8 @@ const getPlanetsDB = dbPlanet.getPlanets;
 const updatePlanetDB = dbPlanet.updatePlanet;
 const deletePlanetDB = dbPlanet.deletePlanet;
 
+const dbZone = require("./controllers/DBZone");
+const createZoneDB = dbZone.createZone;
 
 
 app.get("/", (req, res) => {
@@ -247,12 +249,13 @@ app.delete("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {})
  * under a specific user
  * @param req:
  *  {
- *    username,                 (String)
- *    planet                    (String)
- *    zoneName,                 (String)
- *    zoneImage,                (String) [OPTIONAL]
- *    zoneDescription,          (String) [OPTIONAL]
- *    zoneTags,                 (Array)  [OPTIONAL]
+ *    params: {username (String), planet (String) }
+ *    body: {
+ *      zoneName,                 (String)
+ *      zoneImage,                (String)  [OPTIONAL]
+ *      zoneDescription,          (String)  [OPTIONAL]
+ *      zoneTags,                 (Array)   [OPTIONAL]
+ *    }
  *  }
  * @return res:
  * {
@@ -271,8 +274,9 @@ app.delete("/api/db/user/:username/planet/:planet/zone/:zone", (req, res) => {})
  *        ZoneContent,          (Map)
  *    },
  * }
+ * res contains other user, planet, zone data
  */
-app.post("/api/db/user/:username/planet/:planet/createZone", (req, res) => {});
+app.post("/api/db/user/:username/planet/:planet/createZone", createZoneDB);
 
 
 /** Firestore ZoneContent Subcollection Endpoints
@@ -393,6 +397,7 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
   }).then(() => {
     // Create Users document
     const userData = {
+      Creation_time: userRecord.metadata.creationTime,
       uid: uid,
       Username: displayName,
       Friend_count: 0,
