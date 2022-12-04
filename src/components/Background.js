@@ -29,14 +29,14 @@ export const Background = () => {
                 width: "100%",
                 height: "100%",
                 opacity:.5,
-                "z-index": -1,}}
+                zIndex: -1,}}
             options={{
                 fullScreen: {
                     enable: true,
                     zIndex: -1
                 },
                 background: {
-                    
+
                     color: {
                         value: "#162747",
                     },
@@ -52,7 +52,7 @@ export const Background = () => {
                     color: {
                         value: [ "#ffffff"],
                     },
-                    
+
                     number: {
                         density: {
                             enable: true,
@@ -62,7 +62,7 @@ export const Background = () => {
                         value: 500,
                     },
                     opacity: {
-                        
+
                         anim: {
                             enable: true,
                             speed: 1,
@@ -76,7 +76,7 @@ export const Background = () => {
                         random: true,
                         anim: {
                             enable: true,
-                            
+
                             size_min: 0.5,
                             sync: false
                         },

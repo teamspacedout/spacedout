@@ -12,14 +12,14 @@ import React from 'react';
 
 function Planet({scale, img}) {
     return (
-     <div className={`image-full scale-${scale} btn-circle shadow-md shadow-purple-200`}>
+     <div style={{scale: `${scale}`}} className={`image-full scale-250 btn-circle shadow-md shadow-purple-200`}>
         <img src={`${img}`}/>
     </div>
     );
 }
 
 Planet.defaultProps = {
-    scale: 250,
+    scale: "100%",
     img: "/assests/planets/Earth/4.png"
 }
 export default Planet;
