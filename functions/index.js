@@ -561,6 +561,7 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
   }).then(() => {
     // Create Users document
     const userData = {
+      Creation_time: userRecord.metadata.creationTime,
       uid: uid,
       Username: displayName,
       Friend_count: 0,
