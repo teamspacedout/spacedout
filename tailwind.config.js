@@ -6,6 +6,9 @@ module.exports = {
       scale: {
         '250': '2.50',
         '350': '3.50',
+      },
+      fontFamily: {
+        'space': ['"VT323"'],
       }
     },
   },
