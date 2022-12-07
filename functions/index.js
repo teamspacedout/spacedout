@@ -397,7 +397,7 @@ exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
   }).then(() => {
     // Create Users document
     const userData = {
-      Creation_time: userRecord.metadata.creationTime,
+      Creation_time: admin.firestore.Timestamp.now().toDate(),
       uid: uid,
       Username: displayName,
       Friend_count: 0,
