@@ -8,6 +8,7 @@ import axios from "axios";
 import {useNavigate} from "react-router-dom";
 import UserLogin from "../lib/context";
 import NamePlate from "../components/NamePlate";
+import Loading from "../components/Loading";
 
 function UserPage() {
 
@@ -45,14 +46,7 @@ function UserPage() {
 
     if(!page.data) {
         return (
-           <main>
-               <div className="h-screen flex justify-center items-center">
-                   <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full "
-                        role="status">
-                       <span className="visually-hidden"></span>
-                   </div>
-               </div>
-           </main>
+           <Loading/>
         )
     }
 
