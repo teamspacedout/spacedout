@@ -14,6 +14,7 @@ import Settings from "./routes/Settings";
 import React from "react";
 import NavBar from "./components/NavBar";
 import FourZeroFour from "./routes/404";
+import Create from "./routes/Create";
 
 
 
@@ -51,6 +52,10 @@ const router = createBrowserRouter([{
     {
         path: "/settings",
         element: <Settings />,
+    },
+    {
+        path: "/create",
+        element: <Create />,
     },
     {
         path: "/404",

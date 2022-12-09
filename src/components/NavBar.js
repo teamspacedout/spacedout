@@ -13,8 +13,6 @@ function NavBar() {
 
             <input type="checkbox" id="login" className="modal-toggle" />
             <Modal/>
-
-
             <div className="flex-1">
                 <Link to = '/' className="btn btn-ghost text-white normal-case text-xl">Spaced Out</Link>
             </div>
@@ -29,6 +27,7 @@ function NavBar() {
                 <ul tabIndex="0"
                     className="menu menu-compact dropdown-content mt-3 p-2 shadow bg-base-100 rounded-box w-52">
                     <li> <Link to={user ? `/${username}` : '/404'}> My Planets </Link> </li>
+                    <li> <Link to={user ? `/create` : '/404'}> Create New Planet </Link> </li>
                     <li> <Link to= {user ? `/${username}/edit` : '/404' }> Edit Planets </Link> </li>
                     <li> <Link to='/freeroam'> Free-Roam </Link> </li>
                     <li> <Link to= '/'>Settings</Link></li>
