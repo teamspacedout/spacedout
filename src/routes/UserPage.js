@@ -53,18 +53,18 @@ function UserPage() {
     return (
         <main>
             <NavBar/>
-            <div className=" grid grid-rows-3 md:grid-cols-1 gap-3 h-screen w-screen">
+            <div className=" grid grid-rows-3 md:grid-cols-1 gap-3 w-screen">
 
                 <div className="grid grid-cols-3">
-                <h1 className=" pt-14 col-start-2 col-end-3 text-4xl text-center font-bold tracking-tight sm:text-center sm:text-6xl ">
+                <h1 className="text-white pt-14 col-start-2 col-end-3 text-3xl text-center font-bold tracking-tight sm:text-center sm:text-6xl ">
                     Welcome to {page.data.Username}'s Profile.
                 </h1>
                 </div>
 
-                <div className="bg-blue-600 bg-opacity-30  row-start-2 row-end-4 grid md:grid-cols-3 ">
-                        <div className="col-span-2">
+                <div className="row-start-2 row-end-4 grid md:grid-cols-3 ">
+                        <div className="bg-blue-600 bg-opacity-30 col-span-2">
 
-                            <div className="card bg-primary bg-opacity-70 text-primary-content md:m-10 grid md:grid-cols-2 md:h-3/4">
+                            <div className="card bg-blue-600 sm:bg-primary bg-opacity-30 sm:bg-opacity-70 text-primary-content md:m-10 grid md:grid-cols-2 md:h-3/4">
                                 <div className="card-body">
 
                                     <h2 style={{fontSize: "4em"}} className="card-title">
@@ -86,7 +86,7 @@ function UserPage() {
                                     </div>
                                 </div>
                                 <div className="grid place-content-center">
-                                    <div className="stats stats-vertical shadow bg-purple-500 text-white m-4 h-80">
+                                    <div className="stats stats-vertical shadow bg-purple-500 text-white m-4 scale-75">
 
                                         <div className="stat">
                                             <div className="stat-title">Planet Count</div>
@@ -115,10 +115,10 @@ function UserPage() {
                     {
 
                     }
-                        <div className="flex flex-row md:flex-col place-items-center ">
+                        <div className="rounded bg-blue-600 md:bg-opacity-30 flex flex-row md:flex-col place-items-center">
 
 
-                            <h1 className="pt-10 text-4xl text-center font-bold tracking-tight sm:text-center sm:text-6xl font-space">
+                            <h1 className="text-white text-4xl text-center font-bold tracking-tight sm:text-center sm:text-6xl font-space">
                                     {(page.data.Username)}'s featured planet
                             </h1>
 
@@ -130,10 +130,6 @@ function UserPage() {
 
                             >
                             </PlanetOrbit>
-                                <div className="pt-6">
-                                    <NamePlate name = "Planet Glob the Gloob" plateColor={"purple"}/>
-                                </div>
-
                             </div>
                         </div>
                 </div>
