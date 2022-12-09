@@ -7,7 +7,6 @@ import Context from "../lib/context";
 function Modal() {
 
     const navigate = useNavigate();
-   // const [user, username] = useContext(Context);
 
     const SignInEmail = (e) => {
 
@@ -38,7 +37,7 @@ function Modal() {
 
         return (
         <div className="modal modal-bottom sm:modal-middle ">
-        <div className="modal-box w-3/12 text-white items-center justify-items-center bg-gradient-to-r from-cyan-500 to-blue-500">
+        <div className="modal-box text-white items-center justify-items-center bg-gradient-to-r from-cyan-500 to-blue-500">
             <label htmlFor="login" className="btn btn-sm btn-circle absolute right-2 top-2">✕</label>
             <h3 className="font-bold text-lg text-center">Log into your account!</h3>
 
