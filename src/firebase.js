@@ -32,7 +32,6 @@ const firebaseConfig = {
   measurementId: "G-X3YWS1RDJM"
 };
 
-console.log(firebaseConfig.apiKey);
 // Name of our Firebase application
 const appName = "Spaced Out - Web";
 

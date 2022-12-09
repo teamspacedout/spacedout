@@ -1,17 +1,26 @@
-import React, {useState} from 'react';
+import React, {useContext, useState} from 'react';
 import axios from "axios";
 import FadingText from "../components/FadingText";
 import {AnimatePresence} from "framer-motion";
-import Loading from "../components/Loading";
+import PlanetOrbit from "../components/PlanetOrbit";
+import Planet from "../components/Planet";
+import PlanetButton from "../components/PlanetButton";
+import {FaHome, FaLock} from "react-icons/fa";
+import {Link} from "react-router-dom";
+import UserLogin from "../lib/context";
 
 
 
 
 
-function Create(props) {
+function Create() {
+
+    const {user, username} = useContext(UserLogin);
+    console.log(user);
+    console.log(username);
 
     const [loaded, setLoaded] = useState(false);
-    const [pageState, setPageState] = useState("chooseVariant");
+    const [pageState, setPageState] = useState("start");
     const [planetType, setPlanetType] = useState("Lava");
     const [imageNumber, setImageNumber] = useState(1);
     const [planetInfo, setPlanetInfo] = useState({
@@ -145,9 +154,31 @@ function Create(props) {
     }
 
     async function createPlanet () {
-        const res = await axios.post("http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/HQrVHTmYjv2qyOr1mt7j5K1S2yZ9/createPlanet", {planetName: planetInfo.Planet_name});
+
+        try {
+        const res = await axios.post(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${username}/createPlanet`,
+            {
+                planetName: planetInfo.Planet_name,
+                planetImage: `/assests/planets/${planetType}/${imageNumber}.png`,
+            });
+    } catch (e) {
+            console.log(e);
+        }
     }
 
+    if(!user) {
+        return(
+            <AnimatePresence>
+                <div className="h-screen grid place-content-center">
+                    <FadingText heading = "Log in to create a Planet" subheading= ""/>
+
+                    <Link to = '/' className="place-self-center place-self-center m-10 w-1/4 btn btn-md bg-purple-400">
+                        Home
+                    </Link>
+                </div>
+            </AnimatePresence>
+        )
+    }
 
     switch(pageState) {
         case "start":
@@ -202,27 +233,63 @@ function Create(props) {
                 <div className="h-screen grid place-content-center">
                     <FadingText heading = {`Pick ${planetType} planet`} subheading= ""/>
                         <div className="flex justify-center mb-14">
-                            <img onLoad={() => setLoaded(true)} style={{scale: "240%"}} src={`/assests/planets/${planetType}/${imageNumber}.png`}/>
+                            <img  alt="Planet Image" onLoad={() => setLoaded(true)} style={{scale: "240%"}} src={`/assests/planets/${planetType}/${imageNumber}.png`}/>
                         </div>
-
-
                     <div className="flex justify-center gap-12 w-full ">
                         <kbd onClick={(event) => planetSelection("left")} className=" scale-125 kbd hover:bg-purple-200 cursor-pointer">◀︎</kbd>
                         <kbd onClick={(event) => planetSelection("right")}  className=" scale-125 kbd hover:bg-purple-200 cursor-pointer">▶︎</kbd>
                     </div>
 
-                    <div  className="place-self-center m-10 w-1/4 btn btn-md bg-purple-400" onClick={() => pageStateUpdate("start")}>
+                    <div  className="place-self-center m-10 w-1/4 btn btn-md bg-purple-400" onClick={() => pageStateUpdate("zoneSelection")}>
                         Next
                     </div>
                 </div>
             )
+        case "zoneSelection":
+            return(
+                <div className="h-screen grid place-content-center">
+                    <FadingText heading = {`Your planets have zones`} subheading= "In total you will have 8, but some are locked for now"/>
+                    <div className="flex justify-center mb-14">
+                        <PlanetOrbit
+                            showOrbit={true}
+                            defaultPlanet={<Planet img={`/assests/planets/${planetType}/${imageNumber}.png`}/>}
+                            remainPlanets={
+                            [   <PlanetButton toolTip = "Home Button" reactIcon = {<FaHome className="text-white-600 scale-150"/>}/>,
+                                <PlanetButton toolTip = "Lock" reactIcon = {<FaLock className="text-gray-600 scale-150"/>}/>,
+                                <PlanetButton toolTip = "Lock" reactIcon = {<FaLock className="text-gray-600 scale-150"/>}/>,
+                                <PlanetButton toolTip = "Lock" reactIcon = {<FaLock className="text-gray-600 scale-150"/>} />,
+                                <PlanetButton toolTip = "Lock" reactIcon = {<FaLock className="text-gray-600 scale-150"/>} />,
+                                <PlanetButton toolTip = "Lock" reactIcon = {<FaLock className="text-gray-600 scale-150"/>} />,
+                                <PlanetButton toolTip = "Lock" reactIcon = {<FaLock className="text-gray-600 scale-150"/>} />,
+                                <PlanetButton toolTip = "Lock" reactIcon = {<FaLock className="text-gray-600 scale-150"/>} />,
+                            ]
+                        }
+                        />
+                    </div>
+                    <div className="place-self-center m-10 w-1/4 btn btn-md bg-purple-400"  onClick={ event => {
+                        pageStateUpdate("finish")
+                        createPlanet();
+                    }}>
+                        Next
+                    </div>
+                </div>
+            )
+        case "finish":
+            return(
+                <AnimatePresence>
+                <div className="h-screen grid place-content-center">
+                    <FadingText heading = {`Good luck and have fun!`} subheading= "Your Journey Awaits!"/>
+                        <Link to={'/'} className="place-self-center">
+                            <Link to = '/' className="place-self-center place-self-center m-10 w-1/4 btn btn-md bg-purple-400">
+                                Home
+                            </Link>
+                        </Link>
+                </div>
+                </AnimatePresence>
+            )
         default:
             return(<div> Default this broken </div>)
     }
-
-    return (
-        <div></div>
-    );
 }
 
 export default Create;
