@@ -1,7 +1,8 @@
 import {fireAuth, fireDB, setDoc} from "../firebase";
-import {createUserWithEmailAndPassword} from "firebase/auth";
-import {useNavigate} from "react-router-dom"
+import {createUserWithEmailAndPassword, updateProfile} from "firebase/auth";
+import {redirect, useNavigate} from "react-router-dom"
 import {doc} from "firebase/firestore";
+import axios from "axios";
 
 
 
@@ -20,6 +21,8 @@ function SignUp() {
             2.) Get good password practices
             3.) Work on
          */
+
+        const username = e.target.name.value;
         const email = e.target.email.value;
         const password = e.target.password.value;
         const auth = fireAuth;
@@ -28,10 +31,9 @@ function SignUp() {
         async function MakeAccount() {
 
             try {
-                const user = await createUserWithEmailAndPassword(auth, email, password);
-                console.log(user);
-
-                return navigate("/");
+                const {user} = await createUserWithEmailAndPassword(auth, email, password);
+                await axios.put(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/auth/user/${user.uid}`, {displayName : username})
+                return navigate('/');
             } catch (e) {
                 console.log(e.toString())
                 console.log("There was an error trying to create your account");
