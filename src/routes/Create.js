@@ -189,7 +189,7 @@ function Create() {
 
                     <input className="input" id="planet" onChange={handlePlanetName} type="text" />
 
-                    <div  className=" place-self-center m-10 w-1/4 btn btn-md bg-purple-400" onClick={() => pageStateUpdate("chooseType")}>
+                    <div  className=" text-white place-self-center m-10 w-1/4 btn btn-md bg-purple-400" onClick={() => pageStateUpdate("chooseType")}>
                     Next
                     </div>
                 </div>
@@ -201,27 +201,27 @@ function Create() {
                     <FadingText heading = "Choose A Planet Type" subheading= ""/>
 
                     <div className="grid grid-cols-3 gap-10 ">
-                        <button className="btn rounded-full bg-red-400" onClick={ event => {
+                        <button className="text-white btn rounded-full bg-red-400" onClick={ event => {
                             pagePlanetTypeUpdate("Desert")
                             pageStateUpdate("chooseVariant")
                         }} > Desert </button>
-                        <button className="btn rounded-full btn-md bg-teal-500" onClick={ event => {
+                        <button className="text-white btn rounded-full btn-md bg-teal-500" onClick={ event => {
                             pagePlanetTypeUpdate("Earth")
                             pageStateUpdate("chooseVariant")
                         }}> Earth </button>
-                        <button className="btn rounded-full btn-md bg-green-500" onClick={ event => {
+                        <button className="text-white btn rounded-full btn-md bg-green-500" onClick={ event => {
                             pagePlanetTypeUpdate("Forest")
                             pageStateUpdate("chooseVariant")
                         }}> Forest </button>
-                        <button className="btn rounded-full btn-md bg-purple-200" onClick={ event => {
+                        <button className="text-white btn rounded-full btn-md bg-purple-200" onClick={ event => {
                             pagePlanetTypeUpdate("Gas")
                             pageStateUpdate("chooseVariant")
                         }}> Gas</button>
-                        <button className="btn rounded-full btn-md bg-indigo-300" onClick={ event => {
+                        <button className="text-white btn rounded-full btn-md bg-indigo-300" onClick={ event => {
                             pagePlanetTypeUpdate("Ice")
                             pageStateUpdate("chooseVariant")
                         }}> Ice</button>
-                        <button className="btn rounded-full btn-md bg-red-600"  onClick={ event => {
+                        <button className="text-white btn rounded-full btn-md bg-red-600"  onClick={ event => {
                             pagePlanetTypeUpdate("Lava")
                             pageStateUpdate("chooseVariant")
                         }}> Lava</button>
@@ -240,7 +240,7 @@ function Create() {
                         <kbd onClick={(event) => planetSelection("right")}  className=" scale-125 kbd hover:bg-purple-200 cursor-pointer">▶︎</kbd>
                     </div>
 
-                    <div  className="place-self-center m-10 w-1/4 btn btn-md bg-purple-400" onClick={() => pageStateUpdate("zoneSelection")}>
+                    <div  className="text-white place-self-center m-10 w-1/4 btn btn-md bg-purple-400" onClick={() => pageStateUpdate("zoneSelection")}>
                         Next
                     </div>
                 </div>
@@ -266,7 +266,7 @@ function Create() {
                         }
                         />
                     </div>
-                    <div className="place-self-center m-10 w-1/4 btn btn-md bg-purple-400"  onClick={ event => {
+                    <div className="text-white place-self-center m-10 w-1/4 btn btn-md bg-purple-400"  onClick={ event => {
                         pageStateUpdate("finish")
                         createPlanet();
                     }}>
@@ -279,11 +279,9 @@ function Create() {
                 <AnimatePresence>
                 <div className="h-screen grid place-content-center">
                     <FadingText heading = {`Good luck and have fun!`} subheading= "Your Journey Awaits!"/>
-                        <Link to={'/'} className="place-self-center">
-                            <Link to = '/' className="place-self-center place-self-center m-10 w-1/4 btn btn-md bg-purple-400">
+                            <Link to = '/' className="text-white place-self-center place-self-center m-10 w-1/4 btn btn-md bg-purple-400">
                                 Home
                             </Link>
-                        </Link>
                 </div>
                 </AnimatePresence>
             )
