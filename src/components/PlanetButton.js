@@ -28,7 +28,7 @@ import {Link} from "react-router-dom";
  */
 function PlanetButton(props) {
     return (
-        <div className={props.hasToolTip ? "tooltip tooltip-secondary" : ""} data-tip ={`${props.toolTip}`} >
+        <label htmlFor={props.html} className={props.hasToolTip ? "tooltip tooltip-secondary" : ""} data-tip ={`${props.toolTip}`} >
            <AnimatePresence>
                {
                    <motion.button
@@ -38,19 +38,19 @@ function PlanetButton(props) {
                 exit={{ scale: 0 }}
                 className= {props.btnProperties}
                 whileHover={{
-                    scale: 1.2,
+                    scale: props.scale + (props.scale/2),
                     transition: { duration: 1 },
                 }}
                 whileTap={{ scale: 0.9 }}
             >
-                <Link to={'/'}>
+                <Link to={`${props.Link}`}>
                     {props.reactIcon}
                 </Link>
 
             </motion.button>
                }
            </AnimatePresence>
-        </div>
+        </label>
     );
 }
 
@@ -61,6 +61,7 @@ PlanetButton.defaultProps = {
     Link: "/",
     hasToolTip: true,
     isVisible: true,
-    scale: 1
+    scale: 1,
+    html: ""
 }
 export default PlanetButton;

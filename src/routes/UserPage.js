@@ -9,8 +9,10 @@ import {useNavigate} from "react-router-dom";
 import UserLogin from "../lib/context";
 import NamePlate from "../components/NamePlate";
 import Loading from "../components/Loading";
+import {APIURL} from "../firebase";
 
 function UserPage() {
+
 
     //const [person, username] = useContext(UserLogin);
     const name = (window.location.pathname).slice(1);
@@ -37,7 +39,7 @@ function UserPage() {
      */
     async function getData() {
         try {
-            return await axios.get(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${name}`);
+            return await axios.get(`${APIURL}/db/user/${name}`);
         } catch (e) {
             return navigate('/404');
         }
@@ -53,7 +55,7 @@ function UserPage() {
     return (
         <main>
             <NavBar/>
-            <div className=" grid grid-rows-3 md:grid-cols-1 gap-3 w-screen">
+            <div className=" grid grid-rows-3 md:grid-cols-1 gap-3 h-screen">
 
                 <div className="grid grid-cols-3">
                 <h1 className="text-white pt-14 col-start-2 col-end-3 text-3xl text-center font-bold tracking-tight sm:text-center sm:text-6xl ">
@@ -62,15 +64,15 @@ function UserPage() {
                 </div>
 
                 <div className="row-start-2 row-end-4 grid md:grid-cols-3 ">
-                        <div className="bg-blue-600 bg-opacity-30 col-span-2">
+                        <div className="bg-blue-600 bg-opacity-30 col-span-2 ">
 
-                            <div className="card bg-blue-600 sm:bg-primary bg-opacity-30 sm:bg-opacity-70 text-primary-content md:m-10 grid md:grid-cols-2 md:h-3/4">
+                            <div className="card bg-blue-600 sm:bg-primary bg-opacity-30 sm:bg-opacity-70 text-primary-content md:m-10 grid md:grid-cols-2 ">
                                 <div className="card-body">
 
                                     <h2 style={{fontSize: "4em"}} className="card-title">
                                         <div className="avatar online">
                                             <div className="w-24 rounded-full">
-                                                <img src="https://t4.ftcdn.net/jpg/00/77/46/11/360_F_77461112_WFAEbGQnlfZDUnJ984ncl44ItgtYw0gJ.jpg"/>
+                                                <img src={page.data.Image_Url}/>
                                             </div>
                                         </div>
                                         {page.data.Username}
@@ -102,7 +104,7 @@ function UserPage() {
 
                                         <div className="stat">
                                             <div className="stat-title">Account Created</div>
-                                            <div className="stat-value">Some Date</div>
+                                            <div className="stat-value">12/14/2022</div>
                                             <div className="stat-desc"></div>
                                         </div>
 
@@ -122,11 +124,18 @@ function UserPage() {
                                     {(page.data.Username)}'s featured planet
                             </h1>
 
-                            <div className="grid grid-rows-1 place-items-center">
+                            <div className="grid grid-rows-1 place-items-center animate-spin-slow">
                             <PlanetOrbit
                                 scale={"100%"}
-                                remainPlanets={[<PlanetButton/>, <PlanetButton/>, <PlanetButton/>, <PlanetButton/>,
-                                    <PlanetButton/>, <PlanetButton/>, <PlanetButton/>, <PlanetButton/>]}
+                                defaultPlanet={<Planet img={"/assests/planets/Gas/1.png"}/>}
+                                remainPlanets={[<PlanetButton/>,
+                                    <PlanetButton/>,
+                                    <PlanetButton/>,
+                                    <PlanetButton/>,
+                                    <PlanetButton/>,
+                                    <PlanetButton/>,
+                                    <PlanetButton/>,
+                                    <PlanetButton/>]}
 
                             >
                             </PlanetOrbit>

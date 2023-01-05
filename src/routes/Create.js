@@ -8,9 +8,7 @@ import PlanetButton from "../components/PlanetButton";
 import {FaHome, FaLock} from "react-icons/fa";
 import {Link} from "react-router-dom";
 import UserLogin from "../lib/context";
-
-
-
+import {APIURL} from "../firebase";
 
 
 function Create() {
@@ -156,7 +154,7 @@ function Create() {
     async function createPlanet () {
 
         try {
-        const res = await axios.post(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${username}/createPlanet`,
+        const res = await axios.post(`${APIURL}/db/user/${username}/createPlanet`,
             {
                 planetName: planetInfo.Planet_name,
                 planetImage: `/assests/planets/${planetType}/${imageNumber}.png`,

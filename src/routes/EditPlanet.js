@@ -5,10 +5,13 @@ import axios from "axios";
 import Loading from "../components/Loading";
 import Planet from "../components/Planet";
 import {Link} from "react-router-dom";
+import {APIURL} from "../firebase";
 
 
 
 function EditPlanet() {
+    const planetName = (window.location.pathname).slice(1);
+    console.log(planetName);
     const {user, username} = useContext(UserLogin);
     const [planets, setPlanets] = useState({data: null});
     //const []
@@ -28,8 +31,8 @@ function EditPlanet() {
 
         if(username) {
             try {
-                console.log(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${username}/planets`);
-                return await axios.get(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/db/user/${username}/planets`);
+                console.log(`${APIURL}/db/user/${username}/planets`);
+                return await axios.get(`${APIURL}/db/user/${username}/planets`);
             } catch (e) {
                 console.log(e);
             }
@@ -52,7 +55,6 @@ function EditPlanet() {
                             <div className=" text-2xl p-3"> {`${planet.Planet_name}`} </div>
                         </div>
                     })}
-                    This is the Edit Planet Page
                 </div>
             </div>
         );

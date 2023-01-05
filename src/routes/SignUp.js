@@ -1,4 +1,4 @@
-import {fireAuth, fireDB, setDoc} from "../firebase";
+import {APIURL, fireAuth, fireDB, setDoc} from "../firebase";
 import {createUserWithEmailAndPassword, updateProfile} from "firebase/auth";
 import {redirect, useNavigate} from "react-router-dom"
 import {doc} from "firebase/firestore";
@@ -32,7 +32,7 @@ function SignUp() {
 
             try {
                 const {user} = await createUserWithEmailAndPassword(auth, email, password);
-                await axios.put(`http://127.0.0.1:5001/lateral-incline-365622/us-central1/app/api/auth/user/${user.uid}`, {displayName : username})
+                await axios.put(`${APIURL}/auth/user/${user.uid}`, {displayName : username})
                 return navigate('/');
             } catch (e) {
                 console.log(e.toString())
