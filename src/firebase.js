@@ -46,7 +46,9 @@ export const fireLytics = getAnalytics(fireApp);
 export const fireFunctions = getFunctions(fireApp);
 export {collection, doc, getDoc, query, onSnapshot, GoogleAuthProvider, setDoc, EmailAuthProvider, signInWithPopup, signInWithEmailAndPassword};
 
-
+export const APIURL = (process.env.NODE_ENV === "development")
+  ? `http://127.0.0.1:5001/${firebaseConfig.projectId}/us-central1/app/api`
+  : `https://us-central1-${firebaseConfig.projectId}.cloudfunctions.net/app/api`;
 
 // Connect Development Emulators
 if (process.env.NODE_ENV === "development") {
