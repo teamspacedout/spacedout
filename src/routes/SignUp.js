@@ -1,8 +1,5 @@
-import {APIURL, fireAuth, fireDB, setDoc} from "../firebase";
-import {createUserWithEmailAndPassword, updateProfile} from "firebase/auth";
-import {redirect, useNavigate} from "react-router-dom"
-import {doc} from "firebase/firestore";
-import axios from "axios";
+import {createUser} from "../firebase";
+import {useNavigate} from "react-router-dom"
 
 
 
@@ -25,14 +22,12 @@ function SignUp() {
         const username = e.target.name.value;
         const email = e.target.email.value;
         const password = e.target.password.value;
-        const auth = fireAuth;
 
 
         async function MakeAccount() {
 
             try {
-                const {user} = await createUserWithEmailAndPassword(auth, email, password);
-                await axios.put(`${APIURL}/auth/user/${user.uid}`, {displayName : username})
+                await createUser({ email, password, displayName: username});
                 return navigate('/');
             } catch (e) {
                 console.log(e.toString())
