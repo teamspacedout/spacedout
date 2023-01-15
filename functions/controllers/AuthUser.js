@@ -291,13 +291,13 @@ const deleteUser = (req, res) => {
  * @param req.body: { email, password, displayName }
  * @return: Map - { displayName, uid, authToken }
  */
-const createUser = (req, res) => {
-    // Create User Auth object from request data
+async function createUser({data, context}) {
+     // Create User Auth object from request data
     const user = {
-        email: req.body.email ? req.body.email.trim() : undefined,
+        email: data.email ? data.email.trim() : undefined,
         emailVerified: false,
-        password: req.body.password ? req.body.password.trim() : undefined,
-        displayName: req.body.displayName ? req.body.displayName.trim() : undefined,
+        password: data.password ? data.password.trim() : undefined,
+        displayName: data.displayName ? data.displayName.trim() : undefined,
     };
 
     let isDataInvalid = false;
@@ -311,7 +311,7 @@ const createUser = (req, res) => {
     }
 
     if (isDataInvalid) {
-        return res.status(500).send({Error: errorMessage});
+        return {Error: errorMessage};
     } else {
         // Create user using Firebase Auth
         return auth.createUser(user)
@@ -322,44 +322,44 @@ const createUser = (req, res) => {
                 const user = {
                 displayName: userRecord.displayName,
                 uid,
-                authToken: data,
-                };
-                return res.status(200).send(user);
-            });
-            })
-            .catch((error) => {
-            let errorResponse = {};
-            switch (error.code) {
-                case "auth/email-already-in-use":
-                errorResponse = {Error: "Email address is already in use"};
-                break;
+        authToken: data,
+        };
+        return {user};
+    });
+    })
+    .catch((error) => {
+    let errorResponse = {};
+    switch (error.code) {
+        case "auth/email-already-in-use":
+        errorResponse = {Error: "Email address is already in use"};
+        break;
 
-                case "auth/email-already-exists":
-                errorResponse = {Error: "Email address is already in use"};
-                break;
+        case "auth/email-already-exists":
+        errorResponse = {Error: "Email address is already in use"};
+        break;
 
-                case "auth/invalid-email":
-                errorResponse = {Error: "Email address is invalid"};
-                break;
+        case "auth/invalid-email":
+        errorResponse = {Error: "Email address is invalid"};
+        break;
 
-                case "auth/operation-not-allowed":
-                errorResponse = {Error: "Signup failed, operation not permitted"};
-                break;
+        case "auth/operation-not-allowed":
+        errorResponse = {Error: "Signup failed, operation not permitted"};
+        break;
 
-                case "auth/weak-password":
-                errorResponse = {Error: "Password is not strong enough"};
-                break;
+        case "auth/weak-password":
+        errorResponse = {Error: "Password is not strong enough"};
+        break;
 
-                case "auth/invalid-password":
-                errorResponse = {Error: "Password is invalid or missing"};
-                break;
+        case "auth/invalid-password":
+        errorResponse = {Error: "Password is invalid or missing"};
+        break;
 
-                default:
-                errorResponse = {Error: error.code};
-            }
-            return res.status(500).send(errorResponse);
-            });
+        default:
+        errorResponse = {Error: error.code};
     }
-};
+    return {Error: errorResponse};
+    });
+}
+}
 
 module.exports = { createUser, getUsers, getUser, updateUser, deleteUser};
