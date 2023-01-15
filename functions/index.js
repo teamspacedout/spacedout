@@ -71,12 +71,15 @@ app.get("/api", (req, res) => {
  * Currently limits request to 100 users
  */
 app.get("/api/auth/users", getUsersAuth);
+exports.getUsersAuth = functions.https.onCall((data, context) => getUsersAuth);
+
 
 /** Auth endpoint: Queries Firebase Auth for a specific user
  * @param req.params: { user: The auth uid of the user }
  * @return Map - An object containing the UserRecord Auth data
  */
 app.get("/api/auth/user/:user", getUserAuth);
+exports.getUserAuth = functions.https.onCall((data, context) => getUserAuth);
 
 /** Auth endpoint: Updates Firebase Auth for a specific user
  * @param req.params: { user: The auth uid of the user }
@@ -86,6 +89,7 @@ app.get("/api/auth/user/:user", getUserAuth);
  * @return: Map - An object containing success state and updated user data }
  */
 app.put("/api/auth/user/:user", updateUserAuth);
+exports.updateUserAuth = functions.https.onCall((data, context) => updateUserAuth);
 
 /** Auth endpoint: Deletes Firebase Auth for a specific user
  * Additionally deletes the user's User document and Username
@@ -94,7 +98,7 @@ app.put("/api/auth/user/:user", updateUserAuth);
  * @return: Map - An object containing success state and deleted user data
  */
 app.delete("/api/auth/user/:user", deleteUserAuth);
-
+exports.deleteUserAuth = functions.https.onCall((data, context) => deleteUserAuth);
 /** Auth endpoint: Processes user account signup
  * Creates a User with Firebase Authentication
  * using Email/Password form-data
@@ -107,7 +111,10 @@ app.delete("/api/auth/user/:user", deleteUserAuth);
  * @return: Map - { displayName, uid, authToken }
  */
 app.post("/api/auth/user/signup", createUserAuth);
-
+exports.createUserAuth = functions.https.onCall((data, context) => {
+  console.log({data, context});
+  return createUserAuth({data, context});
+});
 
 /** Firebase Firestore Endpoints
  */
@@ -121,12 +128,14 @@ app.post("/api/auth/user/signup", createUserAuth);
  * @return: Array - An array containing the Users documents data
  */
 app.get("/api/db/users", getUsersDB);
+exports.getUsersDB = functions.https.onCall((data, context) => getUsersDB);
 
 /** DB endpoint: Queries the database for a specific user
  * @param req.params: { username }
  * @return Map - An object containing the User document data
  */
 app.get("/api/db/user/:username", getUserDB);
+exports.getUserDB = functions.https.onCall((data, context) => getUserDB);
 
 /** DB endpoint: Updates the document for a specific user
  * @param req.params: { username }
@@ -138,7 +147,7 @@ app.get("/api/db/user/:username", getUserDB);
  * @return Map - An object containing the updated User document data
  */
 app.put("/api/db/user/:username", updateUserDB);
-
+exports.updateUserDB = functions.https.onCall((data, context) => updateUserDB);
 
 /** Firestore Planets Subcollection Endpoints
  */
@@ -150,6 +159,7 @@ app.put("/api/db/user/:username", updateUserDB);
  * @return Array - An array containing the Planets documents data
  */
 app.get("/api/db/user/:username/planets", getPlanetsDB);
+exports.getPlanetsDB = functions.https.onCall((data, context) => getPlanetsDB);
 
 /** DB endpoint: Queries the database for a specific planet
  * under a specific user
@@ -157,6 +167,7 @@ app.get("/api/db/user/:username/planets", getPlanetsDB);
  * @return Map - An object containing the Planet document data
  */
 app.get("/api/db/user/:username/planet/:planet", getPlanetDB);
+exports.getPlanetDB = functions.https.onCall((data, context) => getPlanetDB);
 
 /** DB endpoint: Updates the document for a specific planet
  * under a specific user
@@ -171,6 +182,7 @@ app.get("/api/db/user/:username/planet/:planet", getPlanetDB);
  * @return Map - An object containing the Planet document data
  */
 app.put("/api/db/user/:username/planet/:planet", updatePlanetDB);
+exports.updatePlanetDB = functions.https.onCall((data, context) => updatePlanetDB);
 
 /** DB endpoint: Deletes the document for a specific planet
  * under a specific user
@@ -178,6 +190,7 @@ app.put("/api/db/user/:username/planet/:planet", updatePlanetDB);
  * @return Map - An object containing the Planet document data
  */
 app.delete("/api/db/user/:username/planet/:planet", deletePlanetDB);
+exports.deletePlanetDB = functions.https.onCall((data, context) => deletePlanetDB);
 
 /** DB endpoint: Creates a new planet document under a specific user
  * @param req.params { username }
@@ -211,7 +224,7 @@ app.delete("/api/db/user/:username/planet/:planet", deletePlanetDB);
  * }
  */
 app.post("/api/db/user/:username/createPlanet", createPlanetDB);
-
+exports.createPlanetDB = functions.https.onCall((data, context) => createPlanetDB);
 
 /** Firestore Zones Subcollection Endpoints
  */
@@ -362,6 +375,8 @@ app.get("/api/db/query/:query", () => {});
 
 
 exports.app = functions.https.onRequest(app);
+
+
 
 // Creates User Document in Users Collection on creation of new user
 exports.createUserDoc = functions.auth.user().onCreate((userRecord) => {
